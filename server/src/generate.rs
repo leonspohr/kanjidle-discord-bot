@@ -1,14 +1,12 @@
 use std::ops::Range;
 use std::time::Instant;
 
-use data::{Kanji, Word};
-use indexmap::IndexMap;
 use itertools::Itertools;
 use ordered_float::OrderedFloat;
 
-use crate::data::{self, KanjiClass, Loc, WordData};
+use crate::data::{Ji, KanjiClass, KanjiData, Loc, WordData};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct PuzzleOptions {
     // Kanji picking options
     pub kanji_class: KanjiClass,
@@ -32,36 +30,32 @@ pub struct PuzzleOptions {
 
 #[derive(Debug, Clone)]
 pub struct Hint {
-    pub word: Word,
-    pub answer: Kanji,
+    pub answer: Ji,
     pub answer_location: Loc,
-    pub hint: Kanji,
+    pub hint: Ji,
+    pub rank: usize,
     pub irregular: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Puzzle {
-    pub answer: Kanji,
+    pub answer: Ji,
     pub hints: Vec<Hint>,
     pub extra_hints: Vec<Hint>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Generator<'a, R> {
     pub rng: R,
-    pub kanjis: &'a IndexMap<String, Kanji>,
+    pub kanji_data: &'a KanjiData,
     pub word_data: &'a WordData,
 }
 
 impl<'a, R> Generator<'a, R> {
-    pub fn new(
-        rng: R,
-        kanjis: &'a IndexMap<String, Kanji>,
-        word_data: &'a WordData,
-    ) -> Generator<'a, R> {
+    pub fn new(rng: R, kanji_data: &'a KanjiData, word_data: &'a WordData) -> Generator<'a, R> {
         Generator {
             rng,
-            kanjis,
+            kanji_data,
             word_data,
         }
     }
@@ -77,8 +71,8 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
         let start1 = Instant::now();
         for answer in ks {
             let start = Instant::now();
-            let hints = self.find_usable_hints(&answer, options);
-            let puzzle: Option<Puzzle> = self.choose_puzzle_from(&answer, &hints, options);
+            let hints = self.find_usable_hints(answer, options);
+            let puzzle: Option<Puzzle> = self.choose_puzzle_from(answer, &hints, options);
             let t = start.elapsed();
             tracing::debug!("Checked hints in {t:?}");
 
@@ -91,11 +85,14 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
         panic!("Could not generate a puzzle, this should not occur")
     }
 
-    pub fn choose_kanji(&mut self, options: &PuzzleOptions) -> Vec<Kanji> {
+    pub fn choose_kanji(&mut self, options: &PuzzleOptions) -> Vec<Ji> {
         let ks = self
+            .kanji_data
             .kanjis
             .values()
-            .filter(|k| k.meta.class <= options.kanji_class)
+            .filter(|k| {
+                self.kanji_data.kanji_metas.get(&k.ji).unwrap().class <= options.kanji_class
+            })
             .collect_vec();
         weighted_shuffle(&ks, &mut self.rng, |k| {
             if k.rank > options.rare_kanji_rank {
@@ -104,30 +101,30 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
                 1.0
             }
         })
-        .map(|k| (*k).clone())
+        .map(|k| k.ji)
         .collect()
     }
 
-    pub fn find_usable_hints(&mut self, answer: &Kanji, options: &PuzzleOptions) -> Vec<Hint> {
+    pub fn find_usable_hints(&self, answer: Ji, options: &PuzzleOptions) -> Vec<Hint> {
         self.word_data
             .twos
             .iter()
             .skip_while(|x| x.word.rank < options.word_rarity_range.start)
             .take_while(|x| x.word.rank < options.word_rarity_range.end)
             .filter_map(|two| {
-                let (hint, answer, answer_location) = if *two.a.text == answer.text {
-                    (two.b.clone(), two.a.clone(), Loc::L)
-                } else if *two.b.text == answer.text {
-                    (two.a.clone(), two.b.clone(), Loc::R)
+                let (hint, answer, answer_location) = if two.a == answer {
+                    (two.b, two.a, Loc::L)
+                } else if two.b == answer {
+                    (two.a, two.b, Loc::R)
                 } else {
                     return None;
                 };
                 Some(Hint {
-                    word: two.word.clone(),
                     hint,
                     answer_location,
                     answer,
                     irregular: two.irregular,
+                    rank: two.word.rank,
                 })
             })
             .collect()
@@ -135,7 +132,7 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
 
     pub fn choose_puzzle_from(
         &mut self,
-        answer: &Kanji,
+        answer: Ji,
         hints: &[Hint],
         options: &PuzzleOptions,
     ) -> Option<Puzzle> {
@@ -153,12 +150,14 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
                 } else {
                     1.0
                 };
-                let b2 = if x.hint.rank > options.rare_kanji_hint_rank {
+                let b2 = if self.kanji_data.kanjis.get(&x.hint).unwrap().rank
+                    > options.rare_kanji_hint_rank
+                {
                     options.rare_kanji_hint_bias
                 } else {
                     1.0
                 };
-                let b3 = if x.word.rank >= options.rare_word_hint_rank {
+                let b3 = if x.rank >= options.rare_word_hint_rank {
                     options.rare_word_hint_bias
                 } else {
                     1.0
@@ -184,7 +183,7 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
                 .is_empty()
             {
                 return Some(Puzzle {
-                    answer: answer.clone(),
+                    answer,
                     hints: chosen_hints.iter().copied().cloned().collect(),
                     extra_hints: splits[options.guarantee_answer_by..options.num_hints]
                         .iter()
@@ -197,19 +196,21 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
         None
     }
 
-    pub fn find_unintended_solutions(&self, answer: &Kanji, hints: &[&Hint]) -> Vec<&Kanji> {
-        self.kanjis
-            .values()
-            .filter(|k| {
-                k.text != answer.text
+    pub fn find_unintended_solutions(&self, answer: Ji, hints: &[&Hint]) -> Vec<Ji> {
+        self.kanji_data
+            .kanjis
+            .keys()
+            .copied()
+            .filter(|&k| {
+                k != answer
                     && hints.iter().all(|x| match x.answer_location {
                         Loc::L => {
-                            let key = k.text.clone() + &x.hint.text;
-                            self.word_data.keys.contains(&key)
+                            let key = String::from_iter(&[k.0, x.hint.0]);
+                            self.word_data.two_keys.contains(&key)
                         }
                         Loc::R => {
-                            let key = x.hint.text.clone() + &k.text;
-                            self.word_data.keys.contains(&key)
+                            let key = String::from_iter(&[x.hint.0, k.0]);
+                            self.word_data.two_keys.contains(&key)
                         }
                     })
             })

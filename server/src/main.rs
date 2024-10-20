@@ -13,9 +13,8 @@ use axum::{
     BoxError, Router,
 };
 use chrono::{DurationRound, TimeDelta, Utc};
-use data::{Kanji, KanjiClass, Loc, WordData};
+use data::{Ji, KanjiClass, KanjiData, Loc, WordData};
 use generate::{Generator, Hint, Puzzle, PuzzleOptions};
-use indexmap::IndexMap;
 use itertools::Itertools;
 use rand::SeedableRng;
 use serde::{Deserialize, Serialize};
@@ -27,13 +26,13 @@ pub mod data;
 pub mod generate;
 
 struct ApiState {
-    pub kanjis: IndexMap<String, Kanji>,
+    pub kanji_data: KanjiData,
     pub word_data: WordData,
 }
 
 impl ApiState {
     fn to_generator<R: rand::Rng>(&self, rng: R) -> Generator<R> {
-        Generator::new(rng, &self.kanjis, &self.word_data)
+        Generator::new(rng, &self.kanji_data, &self.word_data)
     }
 
     fn to_generator_random(&self) -> Generator<impl rand::Rng> {
@@ -70,20 +69,23 @@ async fn main() -> Result<()> {
 
     tracing::info!("Starting to load kanji...");
     let start = Instant::now();
-    let kanjis = data::load_kanjis()?;
+    let kanji_data = data::load_kanjis()?;
     let duration = start.elapsed();
     tracing::info!("Loaded kanjis in {duration:?}");
 
     tracing::info!("Starting to load words...");
     let start = Instant::now();
-    let word_data = data::load_words(&kanjis)?;
+    let word_data = data::load_words(&kanji_data)?;
     let duration = start.elapsed();
     tracing::info!("Loaded words in {duration:?}");
 
     let app = Router::new()
         .route("/v1/today", get(get_today))
         .route("/v1/random", get(get_random))
-        .with_state(Arc::new(ApiState { word_data, kanjis }))
+        .with_state(Arc::new(ApiState {
+            word_data,
+            kanji_data,
+        }))
         .layer(
             CorsLayer::new()
                 .allow_methods(vec![Method::GET, Method::OPTIONS])
@@ -111,7 +113,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct ReqPuzzleOptions {
     difficulty: ReqDifficulty,
     mode: ReqMode,
@@ -210,18 +212,18 @@ impl ReqPuzzleOptions {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Serialize)]
 struct ResPuzzle {
     hints: Vec<ResHint>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     extra_hints: Vec<ResHint>,
-    answer: String,
+    answer: Ji,
 }
 
 impl ResPuzzle {
     fn new_from_puzzle(puzzle: &Puzzle) -> ResPuzzle {
         ResPuzzle {
-            answer: puzzle.answer.text.clone(),
+            answer: puzzle.answer,
             hints: puzzle.hints.iter().map(ResHint::new_from_hint).collect(),
             extra_hints: puzzle
                 .extra_hints
@@ -238,17 +240,17 @@ impl std::fmt::Display for ResPuzzle {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Serialize)]
 pub struct ResHint {
     pub answer: Loc,
-    pub hint: String,
+    pub hint: Ji,
 }
 
 impl ResHint {
     fn new_from_hint(hint: &Hint) -> ResHint {
         ResHint {
             answer: hint.answer_location,
-            hint: hint.hint.text.clone(),
+            hint: hint.hint,
         }
     }
 }
