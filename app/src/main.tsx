@@ -9,7 +9,9 @@ const queryClient = new QueryClient();
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <div className="overflow-y-scroll h-screen">
+        <App />
+      </div>
     </QueryClientProvider>
   </StrictMode>
 );

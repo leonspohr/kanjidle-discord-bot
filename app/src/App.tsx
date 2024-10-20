@@ -14,7 +14,7 @@ function App() {
   const [result, setResult] = useState<Result>(Result.None);
 
   return (
-    <div className="flex flex-col w-screen h-screen justify-center items-center gap-4 text-2xl lg:text-3xl xl:text-4xl">
+    <div className="flex flex-col container my-8 justify-center items-center gap-4 text-2xl lg:text-3xl xl:text-4xl">
       {query.isPending ? (
         <span>読込中</span>
       ) : query.isError ? (
