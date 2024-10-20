@@ -1,0 +1,14 @@
+# This configuration is for use with `npm run dev` when working on the frontend.
+
+version: '3.8'
+
+services:
+  server:
+    build: ./server
+    environment:
+      RUST_LOG: INFO
+      KDLE_PORT: 3000
+      KDLE_RATE_NUM: 3
+      KDLE_RATE_PER: 6
+    ports:
+      - 3000:3000
