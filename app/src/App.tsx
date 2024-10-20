@@ -24,7 +24,7 @@ function App() {
           <div className="flex flex-col justify-center items-center gap-4 h-[4ch]">
             {result !== Result.None && (
               <button
-                className="border border-black bg-slate-200 px-4 py-2 rounded-xl w-[16ch] h-[4ch]"
+                className="bg-slate-200 dark:bg-slate-500 rounded-lg w-[14ch] h-[3ch] disabled:bg-slate-400 disabled:text-slate-600 text-center"
                 onClick={() => {
                   void window.navigator.clipboard.writeText(
                     `Kanjidle (Beta) ${new Date().toJSON().slice(0, 10)} ${
@@ -49,11 +49,13 @@ function App() {
             onSubmit={(e) => {
               e.preventDefault();
               if (guess === query.data.answer) {
+                setGuess("　");
                 setResult(Result.Win);
               } else if (guess !== query.data?.answer) {
                 setAttempts([...attempts, guess]);
                 setGuess("");
                 if (attempts.length === 4) {
+                  setGuess("　");
                   setResult(Result.Lose);
                 }
               }
@@ -61,15 +63,15 @@ function App() {
           >
             <input
               name="answer"
-              className="border border-black bg-slate-200 px-4 py-2 rounded-xl w-[16ch] h-[4ch] disabled:bg-slate-400 text-center"
+              className="bg-slate-200 dark:bg-slate-500 rounded-xl w-[14ch] h-[3ch] disabled:bg-slate-400 dark:disabled:bg-slate-600 dark:disabled:text-slate-500 text-center"
               disabled={result !== Result.None}
               value={guess}
-              placeholder="漢字１文字"
+              placeholder="✏ 漢字１文字"
               onChange={(e) => setGuess(e.target.value)}
             ></input>
             <div className="flex flex-row gap-4 justify-center items-center flex-wrap">
               <button
-                className="border border-black bg-slate-200 px-4 py-2 rounded-xl w-[10ch] h-[4ch] disabled:bg-slate-400 text-center"
+                className="bg-slate-200 dark:bg-slate-500 rounded-xl w-[8ch] h-[3ch] disabled:bg-slate-400 disabled:text-slate-600 dark:disabled:bg-slate-600 dark:disabled:text-slate-500 text-center"
                 type="submit"
                 disabled={
                   !/^\p{Script=Han}$/u.test(guess) ||
@@ -80,13 +82,14 @@ function App() {
                 決定
               </button>
               <button
-                className="border border-black bg-slate-200 px-4 py-2 rounded-xl w-[10ch] h-[4ch] disabled:bg-slate-400 text-center"
+                className="bg-slate-200 dark:bg-slate-500 rounded-xl w-[8ch] h-[3ch] disabled:bg-slate-400 disabled:text-slate-600 dark:disabled:bg-slate-600 dark:disabled:text-slate-500 text-center"
                 type="button"
                 disabled={result !== Result.None}
                 onClick={() => {
                   setAttempts([...attempts, null]);
                   setGuess("");
                   if (attempts.length === 4) {
+                    setGuess("　");
                     setResult(Result.Lose);
                   }
                 }}
