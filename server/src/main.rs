@@ -1,4 +1,5 @@
 use std::net::SocketAddr;
+use std::sync::Arc;
 use std::time::Instant;
 use std::{env, time::Duration};
 
@@ -25,7 +26,6 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilte
 pub mod data;
 pub mod generate;
 
-#[derive(Clone)]
 struct ApiState {
     pub kanjis: IndexMap<String, Kanji>,
     pub word_data: WordData,
@@ -83,7 +83,7 @@ async fn main() -> Result<()> {
     let app = Router::new()
         .route("/v1/today", get(get_today))
         .route("/v1/random", get(get_random))
-        .with_state(ApiState { word_data, kanjis })
+        .with_state(Arc::new(ApiState { word_data, kanjis }))
         .layer(
             CorsLayer::new()
                 .allow_methods(vec![Method::GET, Method::OPTIONS])
@@ -263,7 +263,7 @@ impl std::fmt::Display for ResHint {
 }
 
 async fn get_today(
-    State(state): State<ApiState>,
+    State(state): State<Arc<ApiState>>,
     extract::Query(payload): extract::Query<ReqPuzzleOptions>,
 ) -> Result<Json<ResPuzzle>, StatusCode> {
     let today = Utc::now().duration_trunc(TimeDelta::days(1)).unwrap();
@@ -276,7 +276,7 @@ async fn get_today(
 }
 
 async fn get_random(
-    State(state): State<ApiState>,
+    State(state): State<Arc<ApiState>>,
     extract::Query(payload): extract::Query<ReqPuzzleOptions>,
 ) -> Result<Json<ResPuzzle>, StatusCode> {
     let mut g = state.to_generator_random();

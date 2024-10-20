@@ -171,7 +171,7 @@ pub struct Compound2 {
     pub irregular: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct WordData {
     pub words: Vec<Word>,
     pub twos: Vec<Compound2>,
