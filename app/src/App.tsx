@@ -125,9 +125,9 @@ function score(attempts: number, result: Result): string {
     case 2:
       return "🟨🟨🟩\n🟨✅🟨\n⬛🟨⬛";
     case 3:
-      return "🟨🟨🟨\n🟨✅🟨\n🟩🟨⬛";
+      return "🟨🟨🟨\n🟨✅🟨\n⬛🟨🟩";
     case 4:
     default:
-      return "🟨🟨🟨\n🟨✅🟨\n🟨🟨🟩";
+      return "🟨🟨🟨\n🟨✅🟨\n🟩🟨🟨";
   }
 }

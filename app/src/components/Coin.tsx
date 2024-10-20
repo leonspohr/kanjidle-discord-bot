@@ -59,8 +59,8 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
               "grid-in-w4",
               "grid-in-w5 place-self-end",
               "grid-in-w6 justify-self-start self-end",
-              "grid-in-w7 justify-self-end self-start",
-              "grid-in-w8 place-self-start",
+              "grid-in-w7 place-self-start",
+              "grid-in-w8 justify-self-end self-start",
             ][i],
             "text-4xl",
             result !== Result.None && "text-blue-500 underline"

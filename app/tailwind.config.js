@@ -9,7 +9,7 @@ export default {
           ".  a5 a1 a6 . ",
           "w4 a4 qq a2 w2",
           ".  a7 a3 a8 . ",
-          "w7 .  w3 .  w8",
+          "w8 .  w3 .  w7",
         ],
       },
       gridTemplateColumns: {
