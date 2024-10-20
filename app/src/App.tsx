@@ -28,7 +28,7 @@ function App() {
                 onClick={() => {
                   void window.navigator.clipboard.writeText(
                     `Kanjidle (Beta) ${new Date().toJSON().slice(0, 10)} ${
-                      result === Result.Lose ? "X" : attempts.length
+                      result === Result.Lose ? "X" : attempts.length + 1
                     }/5\n` +
                       score(attempts.length, result) +
                       `\nhttps://kanjidle.onecomp.one`
@@ -49,8 +49,6 @@ function App() {
             onSubmit={(e) => {
               e.preventDefault();
               if (guess === query.data.answer) {
-                setAttempts([...attempts, guess]);
-                setGuess("");
                 setResult(Result.Win);
               } else if (guess !== query.data?.answer) {
                 setAttempts([...attempts, guess]);
@@ -117,15 +115,15 @@ function score(attempts: number, result: Result): string {
     return "🟨🟨🟨\n🟨🟥🟨\n🟨🟨🟨";
   }
   switch (attempts) {
-    case 1:
+    case 0:
       return "⬛🟩⬛\n🟩✅🟩\n⬛🟩⬛";
-    case 2:
+    case 1:
       return "🟩🟨⬛\n🟨✅🟨\n⬛🟨⬛";
-    case 3:
+    case 2:
       return "🟨🟨🟩\n🟨✅🟨\n⬛🟨⬛";
-    case 4:
+    case 3:
       return "🟨🟨🟨\n🟨✅🟨\n🟩🟨⬛";
-    case 5:
+    case 4:
     default:
       return "🟨🟨🟨\n🟨✅🟨\n🟨🟨🟩";
   }
