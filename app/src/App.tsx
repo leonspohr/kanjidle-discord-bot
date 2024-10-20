@@ -9,7 +9,7 @@ function App() {
     queryKey: ["classic", "today"],
     queryFn: () => fetchToday(),
   });
-  const [attempts, setAttempts] = useState([] as string[]);
+  const [attempts, setAttempts] = useState([] as (string | null)[]);
   const [guess, setGuess] = useState("");
   const [result, setResult] = useState<Result>(Result.None);
 
@@ -84,7 +84,7 @@ function App() {
                 type="button"
                 disabled={result !== Result.None}
                 onClick={() => {
-                  setAttempts([...attempts, "スキップ"]);
+                  setAttempts([...attempts, null]);
                   setGuess("");
                   if (attempts.length === 4) {
                     setResult(Result.Lose);
@@ -97,8 +97,8 @@ function App() {
           </form>
           <div className="flex flex-col justify-start items-center h-[8em] gap-2">
             {attempts.map((x, i) => (
-              <span key={x + i} className="text-red-600">
-                {x}
+              <span key={String(x) + i} className="text-red-600">
+                ✘ {x ?? "　"}
               </span>
             ))}
           </div>
