@@ -2,7 +2,23 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      gridTemplateAreas: {
+        coin: [
+          "w5 .  w1 .  w6",
+          ".  a5 a1 a6 . ",
+          "w4 a4 qq a2 w2",
+          ".  a7 a3 a8 . ",
+          "w7 .  w3 .  w8",
+        ],
+      },
+      gridTemplateColumns: {
+        coin: "4rem 2rem 4rem 2rem 4rem",
+      },
+      gridTemplateRows: {
+        coin: "4rem 2rem 4rem 2rem 4rem",
+      },
+    },
   },
-  plugins: [],
+  plugins: [require("@savvywombat/tailwindcss-grid-areas")],
 };
