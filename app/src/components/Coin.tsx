@@ -20,10 +20,10 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
               "grid-in-a2",
               "grid-in-a3",
               "grid-in-a4",
-              "grid-in-a5",
-              "grid-in-a6",
-              "grid-in-a7",
-              "grid-in-a8",
+              "grid-in-a5 translate-x-1.5 translate-y-1.5",
+              "grid-in-a6 -translate-x-1.5 translate-y-1.5",
+              "grid-in-a7 translate-x-1.5 -translate-y-1.5",
+              "grid-in-a8 -translate-x-1.5 -translate-y-1.5",
             ][i],
             "text-2xl"
           )}
