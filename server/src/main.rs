@@ -12,10 +12,9 @@ use axum::{
     routing::get,
     BoxError, Router,
 };
-use chrono::{DurationRound, TimeDelta, Utc};
+use chrono::{Datelike, DurationRound, TimeDelta, Utc, Weekday};
 use data::{Ji, KanjiClass, KanjiData, Loc, WordData};
 use generate::{Generator, Hint, Puzzle, PuzzleOptions};
-use itertools::Itertools;
 use rand::SeedableRng;
 use serde::{Deserialize, Serialize};
 use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
@@ -115,13 +114,18 @@ async fn main() -> Result<()> {
 
 #[derive(Debug, Deserialize)]
 struct ReqPuzzleOptions {
-    difficulty: ReqDifficulty,
+    difficulty: Difficulty,
     mode: ReqMode,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Deserialize)]
+struct ReqTodayPuzzleOptions {
+    mode: ReqMode,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
-enum ReqDifficulty {
+enum Difficulty {
     Simple,
     Easy,
     Normal,
@@ -143,7 +147,7 @@ impl ReqPuzzleOptions {
             ReqMode::Hidden => (8, 4),
         };
         match self.difficulty {
-            ReqDifficulty::Simple => PuzzleOptions {
+            Difficulty::Simple => PuzzleOptions {
                 kanji_class: KanjiClass::Kyoiku,
                 rare_kanji_rank: 0,
                 rare_kanji_bias: 1.0,
@@ -156,7 +160,7 @@ impl ReqPuzzleOptions {
                 num_hints,
                 guarantee_answer_by,
             },
-            ReqDifficulty::Easy => PuzzleOptions {
+            Difficulty::Easy => PuzzleOptions {
                 kanji_class: KanjiClass::Kyoiku,
                 rare_kanji_rank: 0,
                 rare_kanji_bias: 1.0,
@@ -169,7 +173,7 @@ impl ReqPuzzleOptions {
                 num_hints,
                 guarantee_answer_by,
             },
-            ReqDifficulty::Normal => PuzzleOptions {
+            Difficulty::Normal => PuzzleOptions {
                 kanji_class: KanjiClass::Joyo,
                 rare_kanji_rank: 0,
                 rare_kanji_bias: 1.0,
@@ -182,7 +186,7 @@ impl ReqPuzzleOptions {
                 num_hints,
                 guarantee_answer_by,
             },
-            ReqDifficulty::Hard => PuzzleOptions {
+            Difficulty::Hard => PuzzleOptions {
                 kanji_class: KanjiClass::Joyo,
                 rare_kanji_rank: 2_000,
                 rare_kanji_bias: 1.25,
@@ -195,7 +199,7 @@ impl ReqPuzzleOptions {
                 num_hints,
                 guarantee_answer_by,
             },
-            ReqDifficulty::Lunatic => PuzzleOptions {
+            Difficulty::Lunatic => PuzzleOptions {
                 kanji_class: KanjiClass::Kentei,
                 rare_kanji_rank: 2_000,
                 rare_kanji_bias: 1.5,
@@ -234,9 +238,27 @@ impl ResPuzzle {
     }
 }
 
-impl std::fmt::Display for ResPuzzle {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.hints.iter().join("　"))
+#[derive(Debug, Serialize)]
+struct ResTodayPuzzle {
+    hints: Vec<ResHint>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    extra_hints: Vec<ResHint>,
+    answer: Ji,
+    difficulty: Difficulty,
+}
+
+impl ResTodayPuzzle {
+    fn new_from_puzzle(puzzle: &Puzzle, difficulty: Difficulty) -> ResTodayPuzzle {
+        ResTodayPuzzle {
+            answer: puzzle.answer,
+            hints: puzzle.hints.iter().map(ResHint::new_from_hint).collect(),
+            extra_hints: puzzle
+                .extra_hints
+                .iter()
+                .map(ResHint::new_from_hint)
+                .collect(),
+            difficulty,
+        }
     }
 }
 
@@ -266,14 +288,32 @@ impl std::fmt::Display for ResHint {
 
 async fn get_today(
     State(state): State<Arc<ApiState>>,
-    extract::Query(payload): extract::Query<ReqPuzzleOptions>,
-) -> Result<Json<ResPuzzle>, StatusCode> {
+    extract::Query(payload): extract::Query<ReqTodayPuzzleOptions>,
+) -> Result<Json<ResTodayPuzzle>, StatusCode> {
     let today = Utc::now().duration_trunc(TimeDelta::days(1)).unwrap();
+    let difficulty = match today.weekday() {
+        Weekday::Mon => Difficulty::Easy,
+        Weekday::Tue => Difficulty::Normal,
+        Weekday::Wed => Difficulty::Normal,
+        Weekday::Thu => Difficulty::Hard,
+        Weekday::Fri => Difficulty::Hard,
+        Weekday::Sat => Difficulty::Lunatic,
+        Weekday::Sun => Difficulty::Normal,
+    };
     let mut g = state.to_generator_seeded(
-        today.timestamp() as u64 + payload.mode as u64 * payload.difficulty as u64,
+        today.timestamp() as u64 + (100 * (payload.mode as u64) + (difficulty as u64)),
     );
 
-    let puzzle = ResPuzzle::new_from_puzzle(&g.choose_puzzle(&payload.to_puzzle_options()));
+    let puzzle = ResTodayPuzzle::new_from_puzzle(
+        &g.choose_puzzle(
+            &ReqPuzzleOptions {
+                mode: payload.mode,
+                difficulty,
+            }
+            .to_puzzle_options(),
+        ),
+        difficulty,
+    );
     Ok(Json(puzzle))
 }
 
