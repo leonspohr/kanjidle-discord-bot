@@ -22,18 +22,18 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
               "grid-in-a4",
               "grid-in-a5 translate-x-1.5 translate-y-1.5",
               "grid-in-a6 -translate-x-1.5 translate-y-1.5",
-              "grid-in-a7 translate-x-1.5 -translate-y-1.5",
-              "grid-in-a8 -translate-x-1.5 -translate-y-1.5",
+              "grid-in-a7 -translate-x-1.5 -translate-y-1.5",
+              "grid-in-a8 translate-x-1.5 -translate-y-1.5",
             ][i],
             "text-2xl"
           )}
         >
           {result === Result.None && showExtra + 4 <= i ? (
-            <span className="blur-sm">{"╲╱╱╲"[i - 4]}</span>
+            <span className="blur-sm">{"╲╱╲╱"[i - 4]}</span>
           ) : w.answer === Loc.R ? (
-            "↑→↓←↘↙↗↖"[i]
+            "↑→↓←↘↙↖↗"[i]
           ) : (
-            "↓←↑→↖↗↙↘"[i]
+            "↓←↑→↖↗↘↙"[i]
           )}
         </div>
       ))}
