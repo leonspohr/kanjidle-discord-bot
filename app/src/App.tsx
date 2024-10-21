@@ -105,6 +105,11 @@ function App() {
               </span>
             ))}
           </div>
+          <p className="text-base text-center mx-4">
+            漢字とそれぞれ矢印通りにニ字熟語を成立する漢字は何？
+            <br />
+            回答チャンスは５回！誤答すると新しいヒントが出る！
+          </p>
         </>
       )}
     </div>
