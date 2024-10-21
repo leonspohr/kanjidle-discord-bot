@@ -1,9 +1,9 @@
 import clsx from "clsx";
-import { Loc, ResPuzzle } from "../query/api";
+import { Loc, ResPuzzleHidden } from "../query/api";
 import { Result } from "../Result";
 
 export interface CoinProps {
-  puzzle: ResPuzzle;
+  puzzle: ResPuzzleHidden;
   showExtra: number;
   result: Result;
 }

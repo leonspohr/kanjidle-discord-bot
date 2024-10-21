@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchToday } from "./query/api";
+import { diffName, fetchToday } from "./query/api";
 import { useEffect, useState } from "react";
 import Coin from "./components/Coin";
 import { Result } from "./Result";
@@ -70,6 +70,9 @@ function App() {
               </>
             )}
           </div>
+          <p className="text-sm">
+            今日の難易度は「{diffName(query.data.difficulty)}」
+          </p>
           <Coin
             puzzle={query.data}
             showExtra={attempts.length}
