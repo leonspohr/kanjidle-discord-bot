@@ -1,5 +1,3 @@
-/* eslint-disable no-irregular-whitespace */
-
 import { useQuery } from "@tanstack/react-query";
 import { diffName, fetchToday } from "./query/api";
 import { useEffect, useState } from "react";
@@ -45,7 +43,7 @@ function App() {
         <>
           <div className="h-[5.2ch]"></div>
           <p className="text-sm">
-            {DateTime.utc().toFormat("yyyy-LL-dd")}　
+            {DateTime.utc().toFormat("yyyy-LL-dd")}&#x3000;
             <span className="blur-sm">何々級・Load</span>
           </p>
           <CoinPlaceholder />
@@ -55,7 +53,7 @@ function App() {
         <>
           <div className="h-[5.2ch]"></div>
           <p className="text-sm">
-            {DateTime.utc().toFormat("yyyy-LL-dd")}　
+            {DateTime.utc().toFormat("yyyy-LL-dd")}&#x3000;
             <span className="blur-sm">何々級・Load</span>
           </p>
           <CoinPlaceholder />
@@ -92,7 +90,7 @@ function App() {
             )}
           </div>
           <p className="text-sm">
-            {DateTime.utc().toFormat("yyyy-LL-dd")}　
+            {DateTime.utc().toFormat("yyyy-LL-dd")}&#x3000;
             {diffName(query.data.difficulty)}
           </p>
           <Coin
