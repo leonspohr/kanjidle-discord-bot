@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.59.15",
+    "canvas-confetti": "^1.9.3",
     "clsx": "^2.1.1",
     "immer": "^10.1.1",
     "react": "^18.3.1",
@@ -20,6 +21,7 @@
   "devDependencies": {
     "@eslint/js": "^9.11.1",
     "@savvywombat/tailwindcss-grid-areas": "^4.0.0",
+    "@types/canvas-confetti": "^1.6.4",
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react-swc": "^3.7.1",

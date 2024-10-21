@@ -5,6 +5,7 @@ import Coin from "./components/Coin";
 import { Result } from "./Result";
 import { DateTime } from "ts-luxon";
 import CoinPlaceholder from "./components/CoinPlaceholder";
+import confetti from "canvas-confetti";
 
 function App() {
   const query = useQuery({
@@ -105,12 +106,14 @@ function App() {
               if (guess === query.data.answer) {
                 setGuess("　");
                 setResult(Result.Win);
+                winConfetti();
               } else if (guess !== query.data?.answer) {
                 setAttempts([...attempts, guess]);
                 setGuess("");
                 if (attempts.length === 4) {
                   setGuess("　");
                   setResult(Result.Lose);
+                  loseConfetti();
                 }
               }
             }}
@@ -148,6 +151,7 @@ function App() {
                 if (attempts.length === 4) {
                   setGuess("　");
                   setResult(Result.Lose);
+                  loseConfetti();
                 }
               }}
             >
@@ -204,4 +208,35 @@ function score(attempts: number, result: Result): string {
     default:
       return "🟨🟨🟨\n🟨✅🟨\n🟩🟨🟨";
   }
+}
+
+function winConfetti() {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  void confetti({
+    particleCount: 300,
+    angle: 90,
+    spread: 120,
+    startVelocity: 90,
+    scalar: 2,
+    ticks: 200,
+    gravity: 1,
+    origin: { x: 0.5, y: 1 },
+  });
+}
+
+function loseConfetti() {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  void confetti({
+    particleCount: 100,
+    startVelocity: 70,
+    spread: 360,
+    scalar: 2,
+    gravity: 0,
+    ticks: 100,
+    // @ts-expect-error outdated typings
+    flat: true,
+    shapes: ["circle"],
+    colors: ["#e11d48"],
+    origin: { x: 0.5, y: 0.5 },
+  });
 }
