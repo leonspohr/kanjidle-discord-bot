@@ -25,16 +25,16 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
               "grid-in-a7 -translate-x-1.5 -translate-y-1.5",
               "grid-in-a8 translate-x-1.5 -translate-y-1.5",
             ][i],
-            "text-2xl"
+            "text-2xl",
+            result === Result.None && showExtra + 4 <= i && "blur",
+            "transition-all ease-in-out duration-300"
           )}
         >
-          {result === Result.None && showExtra + 4 <= i ? (
-            <span className="blur-sm">{"╲╱╲╱"[i - 4]}</span>
-          ) : w.answer === Loc.L ? (
-            "↑→↓←↖↗↘↙"[i]
-          ) : (
-            "↓←↑→↘↙↖↗"[i]
-          )}
+          {result === Result.None && showExtra + 4 <= i
+            ? "╲╱╲╱"[i - 4]
+            : w.answer === Loc.L
+            ? "↑→↓←↖↗↘↙"[i]
+            : "↓←↑→↘↙↖↗"[i]}
         </div>
       ))}
       {puzzle.hints.concat(puzzle.extra_hints).map((w, i) => (
@@ -63,14 +63,12 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
               "grid-in-w8 justify-self-end self-start",
             ][i],
             "text-4xl",
-            result !== Result.None && "text-blue-500 underline"
+            result !== Result.None && "text-blue-500 underline",
+            result === Result.None && showExtra + 4 <= i && "blur",
+            "transition-all ease-in-out duration-300"
           )}
         >
-          {result === Result.None && showExtra + 4 <= i ? (
-            <span className="blur">何</span>
-          ) : (
-            w.hint
-          )}
+          {result === Result.None && showExtra + 4 <= i ? "何" : w.hint}
           <span> </span>
         </a>
       ))}
