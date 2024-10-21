@@ -77,8 +77,8 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
       <div
         className={clsx(
           "grid-in-qq text-5xl",
-          result === Result.Win && "text-green-500",
-          result === Result.Lose && "text-red-500"
+          result === Result.Win && "text-green-600",
+          result === Result.Lose && "text-red-600"
         )}
       >
         {result === Result.None ? "？" : puzzle.answer}&#x000A;

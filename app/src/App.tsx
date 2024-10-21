@@ -41,7 +41,7 @@ function App() {
     <div className="flex flex-col container mx-auto my-4 justify-center items-center gap-4 text-2xl lg:text-3xl xl:text-4xl">
       {query.isPending ? (
         <>
-          <div className="h-[5.2ch]"></div>
+          <div className="h-[6ch]"></div>
           <p className="text-sm">
             {DateTime.utc().toFormat("yyyy-LL-dd")}&#x3000;
             <span className="blur-sm">何々級・Load</span>
@@ -51,18 +51,18 @@ function App() {
         </>
       ) : query.isError ? (
         <>
-          <div className="h-[5.2ch]"></div>
+          <div className="h-[6ch]"></div>
           <p className="text-sm">
             {DateTime.utc().toFormat("yyyy-LL-dd")}&#x3000;
             <span className="blur-sm">何々級・Load</span>
           </p>
           <CoinPlaceholder />
-          <span className="text-red-500">エラー</span>
+          <span className="text-red-600">エラー</span>
           <span className="font-mono text-sm">{query.error.message}</span>
         </>
       ) : (
         <>
-          <div className="flex flex-col h-[5.2ch] justify-center items-center gap-4">
+          <div className="flex flex-col h-[6ch] justify-center items-center gap-4">
             {result !== Result.None && (
               <>
                 <p className="text-sm text-center mx-4">
@@ -70,7 +70,7 @@ function App() {
                   {diff}後
                 </p>
                 <button
-                  className="bg-slate-200 dark:bg-slate-500 rounded-lg w-[14ch] h-[3ch] disabled:bg-slate-400 disabled:text-slate-600 text-center"
+                  className="bg-inherit border enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 border-zinc-600 disabled:border-stone-600 rounded-lg w-[14ch] h-[3ch] text-center"
                   onClick={() => {
                     void window.navigator.clipboard.writeText(
                       `Kanjidle (Beta) ${DateTime.utc().toFormat(
@@ -99,7 +99,7 @@ function App() {
             result={result}
           />
           <form
-            className="flex flex-col lg:flex-row gap-4 justify-center items-center"
+            className="flex flex-row gap-4 justify-center items-center"
             onSubmit={(e) => {
               e.preventDefault();
               if (guess === query.data.answer) {
@@ -115,19 +115,19 @@ function App() {
               }
             }}
           >
-            <input
-              name="answer"
-              type="text"
-              autoComplete="off"
-              className="bg-slate-200 dark:bg-slate-500 rounded-xl w-[14ch] h-[3ch] disabled:bg-slate-400 dark:disabled:bg-slate-600 dark:disabled:text-slate-500 text-center"
-              disabled={result !== Result.None}
-              value={guess}
-              placeholder="✏ 漢字１文字"
-              onChange={(e) => setGuess(e.target.value)}
-            ></input>
-            <div className="flex flex-row gap-4 justify-center items-center flex-wrap">
+            <div className="flex flex-row justify-center items-center">
+              <input
+                name="answer"
+                type="text"
+                autoComplete="off"
+                className="z-10 border border-r-0 border-zinc-600 disabled:border-stone-600 bg-inherit rounded-md rounded-r-none w-[10ch] lg:w-[14ch] h-[3ch] text-center outline outline-2 outline-transparent focus:outline-blue-400 transition-colors ease-in-out duration-300"
+                disabled={result !== Result.None}
+                value={guess}
+                placeholder="✏１文字"
+                onChange={(e) => setGuess(e.target.value)}
+              ></input>
               <button
-                className="bg-slate-200 dark:bg-slate-500 rounded-xl w-[8ch] h-[3ch] disabled:bg-slate-400 disabled:text-slate-600 dark:disabled:bg-slate-600 dark:disabled:text-slate-500 text-center"
+                className="border text-emerald-600 border-emerald-600 enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 disabled:text-stone-600 disabled:border-stone-600 bg-inherit rounded-md rounded-l-none w-[5ch] h-[3ch] text-center transition-colors ease-in-out duration-300"
                 type="submit"
                 disabled={
                   !/^\p{Script=Han}$/u.test(guess) ||
@@ -137,22 +137,22 @@ function App() {
               >
                 決定
               </button>
-              <button
-                className="bg-slate-200 dark:bg-slate-500 rounded-xl w-[8ch] h-[3ch] disabled:bg-slate-400 disabled:text-slate-600 dark:disabled:bg-slate-600 dark:disabled:text-slate-500 text-center"
-                type="button"
-                disabled={result !== Result.None}
-                onClick={() => {
-                  setAttempts([...attempts, null]);
-                  setGuess("");
-                  if (attempts.length === 4) {
-                    setGuess("　");
-                    setResult(Result.Lose);
-                  }
-                }}
-              >
-                スキップ
-              </button>
             </div>
+            <button
+              className="border text-rose-600 border-rose-600 enabled:hover:bg-rose-600 enabled:hover:text-zinc-200 enabled:active:bg-rose-600 disabled:text-stone-600 disabled:border-stone-600 bg-inherit rounded-md w-[8ch] h-[3ch] text-center transition-colors ease-in-out duration-300"
+              type="button"
+              disabled={result !== Result.None}
+              onClick={() => {
+                setAttempts([...attempts, null]);
+                setGuess("");
+                if (attempts.length === 4) {
+                  setGuess("　");
+                  setResult(Result.Lose);
+                }
+              }}
+            >
+              スキップ
+            </button>
           </form>
           <div className="flex flex-row justify-start items-center h-[3ch] gap-6">
             {attempts.map((x, i) => (
