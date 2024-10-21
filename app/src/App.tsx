@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchToday } from "./query/api";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Coin from "./components/Coin";
 import { Result } from "./Result";
+import { DateTime } from "ts-luxon";
 
 function App() {
   const query = useQuery({
@@ -13,6 +14,27 @@ function App() {
   const [attempts, setAttempts] = useState([] as (string | null)[]);
   const [guess, setGuess] = useState("");
   const [result, setResult] = useState<Result>(Result.None);
+  const [diff, setDiff] = useState<string>(
+    DateTime.utc()
+      .startOf("day")
+      .plus({ days: 1 })
+      .diffNow(["hours", "minutes", "seconds"])
+      .toFormat("hh:mm:ss")
+  );
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const diff = DateTime.utc()
+        .startOf("day")
+        .plus({ days: 1 })
+        .diffNow(["hours", "minutes", "seconds"]);
+      setDiff(diff.toFormat("hh:mm:ss"));
+      if (diff.toMillis() <= 0) {
+        window.location.reload();
+      }
+    }, 1_000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="flex flex-col container mx-auto my-4 justify-center items-center gap-4 text-2xl lg:text-3xl xl:text-4xl">
@@ -22,22 +44,30 @@ function App() {
         <span>エラー</span>
       ) : (
         <>
-          <div className="h-[3ch]">
+          <div className="flex flex-col h-[5ch] justify-center items-center gap-2">
             {result !== Result.None && (
-              <button
-                className="bg-slate-200 dark:bg-slate-500 rounded-lg w-[14ch] h-[3ch] disabled:bg-slate-400 disabled:text-slate-600 text-center"
-                onClick={() => {
-                  void window.navigator.clipboard.writeText(
-                    `Kanjidle (Beta) ${new Date().toJSON().slice(0, 10)} ${
-                      result === Result.Lose ? "X" : attempts.length + 1
-                    }/5\n` +
-                      score(attempts.length, result) +
-                      `\nhttps://kanjidle.onecomp.one`
-                  );
-                }}
-              >
-                スコアをコピー
-              </button>
+              <>
+                <button
+                  className="bg-slate-200 dark:bg-slate-500 rounded-lg w-[14ch] h-[3ch] disabled:bg-slate-400 disabled:text-slate-600 text-center"
+                  onClick={() => {
+                    void window.navigator.clipboard.writeText(
+                      `Kanjidle (Beta) ${DateTime.utc().toFormat(
+                        "yyyy-LL-dd"
+                      )} ${
+                        result === Result.Lose ? "X" : attempts.length + 1
+                      }/5\n` +
+                        score(attempts.length, result) +
+                        `\nhttps://kanjidle.onecomp.one`
+                    );
+                  }}
+                >
+                  スコアをコピー
+                </button>
+                <p className="text-sm text-center mx-4">
+                  次のパズルは
+                  {diff}後
+                </p>
+              </>
             )}
           </div>
           <Coin
