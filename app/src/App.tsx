@@ -8,6 +8,7 @@ function App() {
   const query = useQuery({
     queryKey: ["classic", "today"],
     queryFn: () => fetchToday(),
+    staleTime: Infinity,
   });
   const [attempts, setAttempts] = useState([] as (string | null)[]);
   const [guess, setGuess] = useState("");
