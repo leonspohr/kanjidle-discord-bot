@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Coin from "./components/Coin";
 import { Result } from "./Result";
 import { DateTime } from "ts-luxon";
+import CoinPlaceholder from "./components/CoinPlaceholder";
 
 function App() {
   const query = useQuery({
@@ -41,9 +42,26 @@ function App() {
   return (
     <div className="flex flex-col container mx-auto my-4 justify-center items-center gap-4 text-2xl lg:text-3xl xl:text-4xl">
       {query.isPending ? (
-        <span>読込中</span>
+        <>
+          <div className="h-[5.2ch]"></div>
+          <p className="text-sm">
+            {DateTime.utc().toFormat("yyyy-LL-dd")}　
+            <span className="blur-sm">何々級・Load</span>
+          </p>
+          <CoinPlaceholder />
+          <span>読込中</span>
+        </>
       ) : query.isError ? (
-        <span>エラー</span>
+        <>
+          <div className="h-[5.2ch]"></div>
+          <p className="text-sm">
+            {DateTime.utc().toFormat("yyyy-LL-dd")}　
+            <span className="blur-sm">何々級・Load</span>
+          </p>
+          <CoinPlaceholder />
+          <span className="text-red-500">エラー</span>
+          <span className="font-mono text-sm">{query.error.message}</span>
+        </>
       ) : (
         <>
           <div className="flex flex-col h-[5.2ch] justify-center items-center gap-4">
