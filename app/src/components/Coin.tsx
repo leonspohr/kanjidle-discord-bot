@@ -30,10 +30,10 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
         >
           {result === Result.None && showExtra + 4 <= i ? (
             <span className="blur-sm">{"╲╱╲╱"[i - 4]}</span>
-          ) : w.answer === Loc.R ? (
-            "↑→↓←↘↙↖↗"[i]
+          ) : w.answer === Loc.L ? (
+            "↑→↓←↖↗↘↙"[i]
           ) : (
-            "↓←↑→↖↗↘↙"[i]
+            "↓←↑→↘↙↖↗"[i]
           )}
         </div>
       ))}
