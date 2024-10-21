@@ -21,7 +21,7 @@ function App() {
         <span>エラー</span>
       ) : (
         <>
-          <div className="flex flex-col justify-center items-center gap-4 h-[4ch]">
+          <div className="h-[3ch]">
             {result !== Result.None && (
               <button
                 className="bg-slate-200 dark:bg-slate-500 rounded-lg w-[14ch] h-[3ch] disabled:bg-slate-400 disabled:text-slate-600 text-center"
@@ -98,11 +98,22 @@ function App() {
               </button>
             </div>
           </form>
-          <div className="flex flex-col justify-start items-center h-[8em] gap-2">
+          <div className="flex flex-row justify-start items-center h-[3ch] gap-6">
             {attempts.map((x, i) => (
-              <span key={String(x) + i} className="text-red-600">
-                ✘ {x ?? "　"}
-              </span>
+              <div
+                key={String(x) + i}
+                className="flex flex-row justify-center items-center text-red-600"
+              >
+                ✗
+                {x ?? (
+                  <div className="grid grid-rows-2 grid-cols-2 text-xs">
+                    <div>ス</div>
+                    <div>キ</div>
+                    <div>ッ</div>
+                    <div>プ</div>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
           <p className="text-base text-center mx-4">
