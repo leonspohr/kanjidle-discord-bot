@@ -1,3 +1,5 @@
+/* eslint-disable no-irregular-whitespace */
+
 import { useQuery } from "@tanstack/react-query";
 import { diffName, fetchToday } from "./query/api";
 import { useEffect, useState } from "react";
@@ -44,9 +46,13 @@ function App() {
         <span>エラー</span>
       ) : (
         <>
-          <div className="flex flex-col h-[5ch] justify-center items-center gap-2">
+          <div className="flex flex-col h-[5.2ch] justify-center items-center gap-4">
             {result !== Result.None && (
               <>
+                <p className="text-sm text-center mx-4">
+                  次のパズルは
+                  {diff}後
+                </p>
                 <button
                   className="bg-slate-200 dark:bg-slate-500 rounded-lg w-[14ch] h-[3ch] disabled:bg-slate-400 disabled:text-slate-600 text-center"
                   onClick={() => {
@@ -61,17 +67,15 @@ function App() {
                     );
                   }}
                 >
-                  スコアをコピー
+                  {result === Result.Lose ? "X" : attempts.length + 1}
+                  /5 コピーする
                 </button>
-                <p className="text-sm text-center mx-4">
-                  次のパズルは
-                  {diff}後
-                </p>
               </>
             )}
           </div>
           <p className="text-sm">
-            今日の難易度は「{diffName(query.data.difficulty)}」
+            {DateTime.utc().toFormat("yyyy-LL-dd")}　
+            {diffName(query.data.difficulty)}
           </p>
           <Coin
             puzzle={query.data}
@@ -97,6 +101,8 @@ function App() {
           >
             <input
               name="answer"
+              type="text"
+              autoComplete="off"
               className="bg-slate-200 dark:bg-slate-500 rounded-xl w-[14ch] h-[3ch] disabled:bg-slate-400 dark:disabled:bg-slate-600 dark:disabled:text-slate-500 text-center"
               disabled={result !== Result.None}
               value={guess}
@@ -151,9 +157,11 @@ function App() {
             ))}
           </div>
           <p className="text-base text-center mx-4">
-            漢字とそれぞれ矢印通りにニ字熟語を成立する漢字は何？
+            真ん中に漢字１文字を入れてすべての二字熟語を作ってください！
             <br />
-            回答チャンスは５回！誤答すると新しいヒントが出る！
+            矢印は文字の順番を表します！例えば「◯←？」は「？◯」になります！
+            <br />
+            回答チャンスは５回！間違えるかスキップすると新しいヒントが出ます！
           </p>
         </>
       )}
