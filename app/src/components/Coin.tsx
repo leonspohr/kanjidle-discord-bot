@@ -72,15 +72,24 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
           <span> </span>
         </a>
       ))}
-      <div
+      <a
+        {...(result === Result.None
+          ? {}
+          : {
+              href: `https://kanji.jitenon.jp/cat/search?search=contain&how=すべて&getdata=${puzzle.answer
+                .codePointAt(0)
+                ?.toString(16)}`,
+            })}
+        target="_blank"
+        rel="noopener noreferrer"
         className={clsx(
           "grid-in-qq text-5xl",
-          result === Result.Win && "text-green-600",
-          result === Result.Lose && "text-red-600"
+          result === Result.Win && "text-green-600 underline",
+          result === Result.Lose && "text-red-600 underline"
         )}
       >
         {result === Result.None ? "？" : puzzle.answer}&#x000A;
-      </div>
+      </a>
     </div>
   );
 }
