@@ -43,7 +43,7 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
           {...(result === Result.None
             ? {}
             : {
-                href: `https://kotobank.jp/word/${
+                href: `https://kotobank.jp/search?t=ja&q=${
                   w.answer === Loc.L
                     ? puzzle.answer + w.hint
                     : w.hint + puzzle.answer
