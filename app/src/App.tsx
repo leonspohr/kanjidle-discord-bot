@@ -13,9 +13,11 @@ import {
 import clsx from "clsx";
 import CoinExample from "./components/CoinExample";
 import {
+  Button,
   Disclosure,
   DisclosureButton,
   DisclosurePanel,
+  Input,
 } from "@headlessui/react";
 
 function App() {
@@ -91,7 +93,7 @@ function App() {
   return (
     <div className="flex flex-col container mx-auto my-4 justify-center items-center gap-4 text-2xl lg:text-3xl xl:text-4xl">
       {import.meta.env.DEV && (
-        <button
+        <Button
           className="absolute top-0 left-0 text-base"
           onClick={() => {
             setAttempts([]);
@@ -99,7 +101,7 @@ function App() {
           }}
         >
           RESET
-        </button>
+        </Button>
       )}
 
       <p className="text-sm">
@@ -118,7 +120,7 @@ function App() {
       >
         {query.isSuccess && result !== Result.None && (
           <div className="flex flex-col justify-center items-center gap-4 overflow-y-hidden">
-            <button
+            <Button
               className="bg-inherit border enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 border-zinc-600 disabled:border-stone-600 rounded-lg w-[14ch] h-[3ch] text-xl lg:text-2xl xl:text-3xl text-center"
               onClick={() => {
                 void window.navigator.clipboard.writeText(
@@ -131,7 +133,7 @@ function App() {
               }}
             >
               コピーする
-            </button>
+            </Button>
             <p className="text-sm text-center mx-4">
               次のパズルは
               {diff}後
@@ -165,7 +167,7 @@ function App() {
             }}
           >
             <div className="flex flex-row justify-center items-center">
-              <input
+              <Input
                 name="answer"
                 type="text"
                 autoComplete="off"
@@ -174,8 +176,8 @@ function App() {
                 value={guess}
                 placeholder="✏１文字"
                 onChange={(e) => setGuess(e.target.value)}
-              ></input>
-              <button
+              ></Input>
+              <Button
                 className="border text-emerald-600 border-emerald-600 enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 disabled:text-stone-600 disabled:border-stone-600 bg-inherit rounded-md rounded-l-none w-[5ch] h-[3ch] text-center transition-colors ease-in-out duration-300"
                 type="submit"
                 disabled={
@@ -185,9 +187,9 @@ function App() {
                 }
               >
                 決定
-              </button>
+              </Button>
             </div>
-            <button
+            <Button
               className="border text-rose-600 border-rose-600 enabled:hover:bg-rose-600 enabled:hover:text-zinc-200 enabled:active:bg-rose-600 disabled:text-stone-600 disabled:border-stone-600 bg-inherit rounded-md w-[8ch] h-[3ch] text-center transition-colors ease-in-out duration-300"
               type="button"
               disabled={result !== Result.None}
@@ -201,7 +203,7 @@ function App() {
               }}
             >
               スキップ
-            </button>
+            </Button>
           </form>
           <div className="flex flex-row justify-start items-center gap-6">
             {attempts.length ? (
