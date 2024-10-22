@@ -12,6 +12,11 @@ import {
 } from "./hooks/useLocalStorage";
 import clsx from "clsx";
 import CoinExample from "./components/CoinExample";
+import {
+  Disclosure,
+  DisclosureButton,
+  DisclosurePanel,
+} from "@headlessui/react";
 
 function App() {
   const query = useQuery({
@@ -85,60 +90,57 @@ function App() {
 
   return (
     <div className="flex flex-col container mx-auto my-4 justify-center items-center gap-4 text-2xl lg:text-3xl xl:text-4xl">
-      {query.isPending ? (
-        <>
-          <div className="h-[6ch]"></div>
-          <p className="text-sm">
-            {DateTime.utc().toFormat("yyyy-LL-dd")}&#x3000;
-            <span className="blur-sm">何々級・Load</span>
-          </p>
-          <CoinPlaceholder />
-          <span>読込中</span>
-        </>
-      ) : query.isError ? (
-        <>
-          <div className="h-[6ch]"></div>
-          <p className="text-sm">
-            {DateTime.utc().toFormat("yyyy-LL-dd")}&#x3000;
-            <span className="blur-sm">何々級・Load</span>
-          </p>
-          <CoinPlaceholder />
-          <span className="text-red-600">エラー</span>
-          <span className="font-mono text-sm">{query.error.message}</span>
-        </>
-      ) : (
-        <>
-          <div className="flex flex-col h-[6ch] justify-center items-center gap-4">
-            {result !== Result.None && (
-              <>
-                <p className="text-sm text-center mx-4">
-                  次のパズルは
-                  {diff}後
-                </p>
-                <button
-                  className="bg-inherit border enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 border-zinc-600 disabled:border-stone-600 rounded-lg w-[14ch] h-[3ch] text-center"
-                  onClick={() => {
-                    void window.navigator.clipboard.writeText(
-                      `Kanjidle (Beta) ${DateTime.utc().toFormat(
-                        "yyyy-LL-dd"
-                      )} ${
-                        result === Result.Lose ? "X" : attempts.length
-                      }/5\n` +
-                        score(attempts.length, result) +
-                        `\nhttps://kanjidle.onecomp.one`
-                    );
-                  }}
-                >
-                  {result === Result.Lose ? "X" : attempts.length}
-                  /5 コピーする
-                </button>
-              </>
-            )}
+      {import.meta.env.DEV && (
+        <button
+          className="absolute top-0 left-0 text-base"
+          onClick={() => {
+            setAttempts([]);
+            setResult(Result.None);
+          }}
+        >
+          RESET
+        </button>
+      )}
+
+      <p className="text-sm">
+        {DateTime.utc().toFormat("yyyy-LL-dd")}&#x3000;
+        {query.isSuccess ? (
+          diffName(query.data.difficulty)
+        ) : (
+          <span className="blur-sm">何々級・Load</span>
+        )}
+      </p>
+      <div
+        className={clsx(
+          "grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out",
+          query.isSuccess && result !== Result.None && "grid-rows-[1fr]"
+        )}
+      >
+        {query.isSuccess && result !== Result.None && (
+          <div className="flex flex-col justify-center items-center gap-4 overflow-y-hidden">
+            <button
+              className="bg-inherit border enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 border-zinc-600 disabled:border-stone-600 rounded-lg w-[14ch] h-[3ch] text-xl lg:text-2xl xl:text-3xl text-center"
+              onClick={() => {
+                void window.navigator.clipboard.writeText(
+                  `Kanjidle (Beta) ${DateTime.utc().toFormat("yyyy-LL-dd")} ${
+                    result === Result.Lose ? "X" : attempts.length
+                  }/5\n` +
+                    score(attempts.length, result) +
+                    `\nhttps://kanjidle.onecomp.one`
+                );
+              }}
+            >
+              コピーする
+            </button>
+            <p className="text-sm text-center mx-4">
+              次のパズルは
+              {diff}後
+            </p>
           </div>
-          <p className="text-sm">
-            {DateTime.utc().toFormat("yyyy-LL-dd")}&#x3000;
-            {diffName(query.data.difficulty)}
-          </p>
+        )}
+      </div>
+      {query.isSuccess ? (
+        <>
           <Coin
             puzzle={query.data}
             showExtra={attempts.length}
@@ -201,7 +203,7 @@ function App() {
               スキップ
             </button>
           </form>
-          <div className="flex flex-row justify-start items-center h-[3ch] gap-6">
+          <div className="flex flex-row justify-start items-center gap-6">
             {attempts.length ? (
               attempts.map((x, i) => (
                 <div
@@ -232,8 +234,29 @@ function App() {
               </div>
             )}
           </div>
-          <h1>パズルの解き方</h1>
-          <div className="flex flex-col justify-center items-center text-base text-center mx-4 gap-4">
+        </>
+      ) : (
+        <>
+          <CoinPlaceholder />
+          {query.isLoading ? "読込中" : "エラー"}
+        </>
+      )}
+      <Disclosure
+        as="div"
+        className="flex flex-col justify-center items-center gap-4"
+      >
+        <DisclosureButton className="bg-inherit border enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 border-zinc-600 disabled:border-stone-600 rounded-lg w-[14ch] h-[3ch] text-xl lg:text-2xl xl:text-3xl text-center">
+          <h2>パズルの解き方</h2>
+        </DisclosureButton>
+        <DisclosurePanel
+          transition
+          className="transition origin-top duration-300 ease-out data-[closed]:-translate-y-6 data-[closed]:opacity-0"
+        >
+          <div
+            className={clsx(
+              "flex flex-col justify-center items-center text-base text-center mx-4 gap-4"
+            )}
+          >
             <CoinExample puzzle={example} showExtra={0} />
             <p>
               真ん中に漢字１文字を入れて全二字熟語を作りましょう！矢印は文字の順番を表します。
@@ -247,8 +270,8 @@ function App() {
               ちなみに、正解は「心」です。
             </p>
           </div>
-        </>
-      )}
+        </DisclosurePanel>
+      </Disclosure>
     </div>
   );
 }
