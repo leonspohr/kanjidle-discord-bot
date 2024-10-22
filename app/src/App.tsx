@@ -10,6 +10,7 @@ import {
   useJSONLocalStorage,
   useParsedLocalStorage,
 } from "./hooks/useLocalStorage";
+import clsx from "clsx";
 
 function App() {
   const query = useQuery({
@@ -120,14 +121,14 @@ function App() {
                       `Kanjidle (Beta) ${DateTime.utc().toFormat(
                         "yyyy-LL-dd"
                       )} ${
-                        result === Result.Lose ? "X" : attempts.length + 1
+                        result === Result.Lose ? "X" : attempts.length
                       }/5\n` +
                         score(attempts.length, result) +
                         `\nhttps://kanjidle.onecomp.one`
                     );
                   }}
                 >
-                  {result === Result.Lose ? "X" : attempts.length + 1}
+                  {result === Result.Lose ? "X" : attempts.length}
                   /5 コピーする
                 </button>
               </>
@@ -147,6 +148,7 @@ function App() {
             onSubmit={(e) => {
               e.preventDefault();
               if (guess === query.data.answer) {
+                setAttempts([...attempts, guess]);
                 setGuess("　");
                 setResult(Result.Win);
               } else if (guess !== query.data?.answer) {
@@ -199,22 +201,35 @@ function App() {
             </button>
           </form>
           <div className="flex flex-row justify-start items-center h-[3ch] gap-6">
-            {attempts.map((x, i) => (
-              <div
-                key={String(x) + i}
-                className="flex flex-row justify-center items-center text-red-600"
-              >
-                ✗
-                {x ?? (
-                  <div className="grid grid-rows-2 grid-cols-2 text-xs">
-                    <div>ス</div>
-                    <div>キ</div>
-                    <div>ッ</div>
-                    <div>プ</div>
-                  </div>
-                )}
+            {attempts.length ? (
+              attempts.map((x, i) => (
+                <div
+                  key={String(x) + i}
+                  className={clsx(
+                    "flex flex-row justify-center items-center",
+                    x === query.data.answer ? "text-green-600" : "text-red-600"
+                  )}
+                >
+                  {x === query.data.answer ? (
+                    <span className="scale-75">✔</span>
+                  ) : (
+                    <span className="-translate-y-0.5">⨯</span>
+                  )}
+                  {x ?? (
+                    <div className="grid grid-rows-2 grid-cols-2 text-xs">
+                      <div>ス</div>
+                      <div>キ</div>
+                      <div>ッ</div>
+                      <div>プ</div>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-stone-600">
+                回答とスキップはここに記録します
               </div>
-            ))}
+            )}
           </div>
           <p className="text-base text-center mx-4">
             真ん中に漢字１文字を入れてすべての二字熟語を作ってください！
@@ -236,15 +251,15 @@ function score(attempts: number, result: Result): string {
     return "🟨🟨🟨\n🟨🟥🟨\n🟨🟨🟨";
   }
   switch (attempts) {
-    case 0:
-      return "⬛🟩⬛\n🟩✅🟩\n⬛🟩⬛";
     case 1:
-      return "🟩🟨⬛\n🟨✅🟨\n⬛🟨⬛";
+      return "⬛🟩⬛\n🟩✅🟩\n⬛🟩⬛";
     case 2:
-      return "🟨🟨🟩\n🟨✅🟨\n⬛🟨⬛";
+      return "🟩🟨⬛\n🟨✅🟨\n⬛🟨⬛";
     case 3:
-      return "🟨🟨🟨\n🟨✅🟨\n⬛🟨🟩";
+      return "🟨🟨🟩\n🟨✅🟨\n⬛🟨⬛";
     case 4:
+      return "🟨🟨🟨\n🟨✅🟨\n⬛🟨🟩";
+    case 5:
     default:
       return "🟨🟨🟨\n🟨✅🟨\n🟩🟨🟨";
   }
