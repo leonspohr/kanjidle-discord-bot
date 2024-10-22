@@ -206,7 +206,7 @@ function App() {
               スキップ
             </Button>
           </form>
-          <div className="flex flex-row justify-start items-center gap-6">
+          <div className="flex flex-row justify-start items-center gap-6 h-[2ch]">
             {attempts.length ? (
               attempts.map((x, i) => (
                 <div
