@@ -172,7 +172,7 @@ function App() {
                 name="answer"
                 type="text"
                 autoComplete="off"
-                className="z-10 border border-r-0 border-zinc-600 disabled:border-stone-600 bg-inherit rounded-md rounded-r-none w-[10ch] lg:w-[14ch] h-[3ch] text-center outline outline-2 outline-transparent focus:outline-blue-400 transition-colors ease-in-out duration-300"
+                className="z-10 border border-r-0 border-zinc-600 disabled:border-stone-600 bg-inherit rounded-md rounded-r-none w-[10ch] lg:w-[14ch] h-[3ch] text-center outline outline-2 outline-transparent focus:outline-blue-400 transition-colors ease-in-out duration-300 disabled:placeholder:opacity-0"
                 disabled={result !== Result.None}
                 value={guess}
                 placeholder="✏１文字"
