@@ -6,6 +6,10 @@ import { Result } from "./Result";
 import { DateTime } from "ts-luxon";
 import CoinPlaceholder from "./components/CoinPlaceholder";
 import confetti from "canvas-confetti";
+import {
+  useJSONLocalStorage,
+  useParsedLocalStorage,
+} from "./hooks/useLocalStorage";
 
 function App() {
   const query = useQuery({
@@ -13,9 +17,19 @@ function App() {
     queryFn: () => fetchToday(),
     staleTime: Infinity,
   });
-  const [attempts, setAttempts] = useState([] as (string | null)[]);
+
+  const [attempts, setAttempts] = useJSONLocalStorage<(string | null)[]>(
+    "attempts",
+    []
+  );
+
+  const [result, setResult] = useJSONLocalStorage<Result>(
+    "result",
+    Result.None
+  );
+
   const [guess, setGuess] = useState("");
-  const [result, setResult] = useState<Result>(Result.None);
+
   const [diff, setDiff] = useState<string>(
     DateTime.utc()
       .startOf("day")
@@ -25,18 +39,41 @@ function App() {
   );
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const diff = DateTime.utc()
-        .startOf("day")
-        .plus({ days: 1 })
-        .diffNow(["hours", "minutes", "seconds"]);
-      setDiff(diff.toFormat("hh:mm:ss"));
-      if (diff.toMillis() <= 0) {
-        window.location.reload();
-      }
-    }, 1_000);
-    return () => clearInterval(interval);
-  }, []);
+    if (result !== Result.None) {
+      const interval = setInterval(() => {
+        const diff = DateTime.utc()
+          .startOf("day")
+          .plus({ days: 1 })
+          .diffNow(["hours", "minutes", "seconds"]);
+        setDiff(diff.toFormat("hh:mm:ss"));
+        if (diff.toMillis() <= 0) {
+          window.location.reload();
+        }
+      }, 1_000);
+      return () => clearInterval(interval);
+    }
+  }, [result]);
+
+  const [lastPlayed, setLastPlayed] = useParsedLocalStorage(
+    "lastPlayed",
+    DateTime.utc().startOf("day"),
+    (s) => DateTime.fromMillis(Number(s), { zone: "utc" }),
+    (v) => v.toMillis().toString()
+  );
+
+  useEffect(() => {
+    if (+lastPlayed.startOf("day") !== +DateTime.utc().startOf("day")) {
+      setAttempts([]);
+      setResult(Result.None);
+      setLastPlayed(DateTime.utc().startOf("day"));
+    } else if (result === Result.Lose) {
+      loseConfetti();
+    } else if (result === Result.Win) {
+      winConfetti();
+    }
+    // Want this to run only on result change, or only on mount for the time change (and ignoring the result).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result]);
 
   return (
     <div className="flex flex-col container mx-auto my-4 justify-center items-center gap-4 text-2xl lg:text-3xl xl:text-4xl">
@@ -106,14 +143,12 @@ function App() {
               if (guess === query.data.answer) {
                 setGuess("　");
                 setResult(Result.Win);
-                winConfetti();
               } else if (guess !== query.data?.answer) {
                 setAttempts([...attempts, guess]);
                 setGuess("");
                 if (attempts.length === 4) {
                   setGuess("　");
                   setResult(Result.Lose);
-                  loseConfetti();
                 }
               }
             }}
@@ -151,7 +186,6 @@ function App() {
                 if (attempts.length === 4) {
                   setGuess("　");
                   setResult(Result.Lose);
-                  loseConfetti();
                 }
               }}
             >
