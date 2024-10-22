@@ -211,7 +211,6 @@ function score(attempts: number, result: Result): string {
 }
 
 function winConfetti() {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   void confetti({
     particleCount: 300,
     angle: 90,
@@ -225,7 +224,6 @@ function winConfetti() {
 }
 
 function loseConfetti() {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   void confetti({
     particleCount: 100,
     startVelocity: 70,
