@@ -66,14 +66,20 @@ function App() {
       setAttempts([]);
       setResult(Result.None);
       setLastPlayed(DateTime.utc().startOf("day"));
-    } else if (result === Result.Lose) {
-      loseConfetti();
-    } else if (result === Result.Win) {
-      winConfetti();
     }
-    // Want this to run only on result change, or only on mount for the time change (and ignoring the result).
+    // Want this to run only on mount for the time change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result]);
+  }, []);
+
+  useEffect(() => {
+    if (!query.isPending && !query.isError) {
+      if (result === Result.Lose) {
+        loseConfetti();
+      } else if (result === Result.Win) {
+        winConfetti();
+      }
+    }
+  }, [query.isError, query.isPending, result]);
 
   return (
     <div className="flex flex-col container mx-auto my-4 justify-center items-center gap-4 text-2xl lg:text-3xl xl:text-4xl">
