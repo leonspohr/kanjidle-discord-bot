@@ -19,6 +19,7 @@ import {
   DisclosurePanel,
   Input,
 } from "@headlessui/react";
+import { BiSolidDownArrow, BiSolidRightArrow } from "react-icons/bi";
 
 function App() {
   const query = useQuery({
@@ -245,18 +246,30 @@ function App() {
       )}
       <Disclosure
         as="div"
-        className="flex flex-col justify-center items-center gap-4"
+        className="flex flex-col justify-center items-center"
       >
-        <DisclosureButton className="bg-inherit border enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 border-zinc-600 disabled:border-stone-600 rounded-lg w-[14ch] h-[3ch] text-xl lg:text-2xl xl:text-3xl text-center">
-          <h2>パズルの解き方</h2>
+        <DisclosureButton
+          className={({ open }) =>
+            clsx(
+              "flex flex-row justify-start items-center bg-inherit border enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 border-zinc-600 disabled:border-stone-600 rounded-lg w-[30ch] h-[3ch] px-2 text-xl lg:text-2xl xl:text-3xl",
+              open && "border-b-1 rounded-b-none"
+            )
+          }
+        >
+          {({ open }) => (
+            <>
+              <span>{open ? <BiSolidDownArrow /> : <BiSolidRightArrow />}</span>
+              <h2>パズルの解き方</h2>
+            </>
+          )}
         </DisclosureButton>
         <DisclosurePanel
           transition
-          className="transition origin-top duration-300 ease-out data-[closed]:-translate-y-6 data-[closed]:opacity-0"
+          className="transition origin-top duration-300 ease-out data-[closed]:-translate-y-6 data-[closed]:opacity-0 w-[30ch] text-xl lg:text-2xl xl:text-3xl border border-t-0 border-zinc-600 rounded-lg rounded-t-none"
         >
           <div
             className={clsx(
-              "flex flex-col justify-center items-center text-base text-center mx-4 gap-4"
+              "flex flex-col justify-center items-center text-base text-center my-4 mx-2 gap-4"
             )}
           >
             <CoinExample puzzle={example} showExtra={0} />
