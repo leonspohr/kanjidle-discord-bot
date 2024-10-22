@@ -103,7 +103,7 @@ function App() {
           RESET
         </Button>
       )}
-
+      <h1>Kanjidle・漢字パズル</h1>
       <p className="text-sm">
         {DateTime.utc().toFormat("yyyy-LL-dd")}&#x3000;
         {query.isSuccess ? (
