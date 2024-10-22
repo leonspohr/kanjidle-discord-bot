@@ -14,9 +14,11 @@ export default {
       },
       gridTemplateColumns: {
         coin: "4rem 2rem 4rem 2rem 4rem",
+        "coin-example": "2rem 1rem 2rem 1rem 2rem",
       },
       gridTemplateRows: {
         coin: "4rem 2rem 4rem 2rem 4rem",
+        "coin-example": "2rem 1rem 2rem 1rem 2rem",
       },
     },
   },

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { diffName, fetchToday } from "./query/api";
+import { diffName, fetchToday, Loc } from "./query/api";
 import { useEffect, useState } from "react";
 import Coin from "./components/Coin";
 import { Result } from "./Result";
@@ -11,6 +11,7 @@ import {
   useParsedLocalStorage,
 } from "./hooks/useLocalStorage";
 import clsx from "clsx";
+import CoinExample from "./components/CoinExample";
 
 function App() {
   const query = useQuery({
@@ -231,13 +232,21 @@ function App() {
               </div>
             )}
           </div>
-          <p className="text-base text-center mx-4">
-            真ん中に漢字１文字を入れてすべての二字熟語を作ってください！
-            <br />
-            矢印は文字の順番を表します！例えば「◯←？」は「？◯」になります！
-            <br />
-            回答チャンスは５回！間違えるかスキップすると新しいヒントが出ます！
-          </p>
+          <h1>パズルの解き方</h1>
+          <div className="flex flex-col justify-center items-center text-base text-center mx-4 gap-4">
+            <CoinExample puzzle={example} showExtra={0} />
+            <p>
+              真ん中に漢字１文字を入れて全二字熟語を作りましょう！矢印は文字の順番を表します。
+              <br />
+              例えば、このパズルでは「◯地」「◯底」「内◯」「熱◯」の◯が求められます。
+            </p>
+            <CoinExample puzzle={example} showExtra={1} />
+            <p>
+              回答チャンスは５回だけです！間違えるかスキップすると新しいヒントが１個出ます！
+              <br />
+              ちなみに、正解は「心」です。
+            </p>
+          </div>
         </>
       )}
     </div>
@@ -245,6 +254,45 @@ function App() {
 }
 
 export default App;
+
+const example = {
+  hints: [
+    {
+      answer: Loc.L,
+      hint: "地",
+    },
+    {
+      answer: Loc.L,
+      hint: "底",
+    },
+    {
+      answer: Loc.R,
+      hint: "内",
+    },
+    {
+      answer: Loc.R,
+      hint: "熱",
+    },
+  ],
+  extra_hints: [
+    {
+      answer: Loc.L,
+      hint: "臓",
+    },
+    {
+      answer: Loc.R,
+      hint: "中",
+    },
+    {
+      answer: Loc.R,
+      hint: "安",
+    },
+    {
+      answer: Loc.L,
+      hint: "配",
+    },
+  ],
+};
 
 function score(attempts: number, result: Result): string {
   if (result === Result.Lose) {
