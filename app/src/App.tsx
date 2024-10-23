@@ -155,121 +155,128 @@ function App() {
         )}
       </div>
       {query.isSuccess ? (
-        <>
-          <Coin
-            puzzle={query.data}
-            showExtra={attempts.length}
-            result={result}
-          />
-          <form
-            className="flex flex-row gap-4 justify-center items-center"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!/^\p{Script=Han}$/u.test(guess)) {
-                toast(
-                  <CustomToast type="warn">
-                    漢字１文字を入力してください
-                  </CustomToast>,
-                  {
-                    id: "invalid-input",
-                  }
-                );
-              } else if (attempts.includes(guess)) {
-                toast(
-                  <CustomToast type="warn">
-                    この漢字はすでに回答しました
-                  </CustomToast>,
-                  {
-                    id: "repeated-input",
-                  }
-                );
-              } else if (guess === query.data.answer) {
-                setAttempts([...attempts, guess]);
-                setGuess("　");
-                setResult(Result.Win);
-              } else if (guess !== query.data?.answer) {
-                setAttempts([...attempts, guess]);
-                setGuess("");
-                if (attempts.length === 4) {
-                  setGuess("　");
-                  setResult(Result.Lose);
-                }
-              }
-            }}
-          >
-            <div className="flex flex-row justify-center items-center">
-              <Input
-                name="answer"
-                type="text"
-                autoComplete="off"
-                className="z-10 border border-r-0 border-zinc-600 disabled:border-stone-600 bg-inherit rounded-md rounded-r-none w-[10ch] lg:w-[14ch] h-[3ch] text-center outline outline-2 outline-transparent focus:outline-blue-400 transition-colors ease-in-out duration-300 disabled:placeholder:opacity-0"
-                disabled={result !== Result.None}
-                value={guess}
-                placeholder="✏１文字"
-                onChange={(e) => setGuess(e.target.value)}
-              ></Input>
-              <Button
-                className="border text-emerald-600 border-emerald-600 enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 disabled:text-stone-600 disabled:border-stone-600 bg-inherit rounded-md rounded-l-none w-[5ch] h-[3ch] text-center transition-colors ease-in-out duration-300"
-                type="submit"
-                disabled={result !== Result.None}
-              >
-                決定
-              </Button>
-            </div>
-            <Button
-              className="border text-rose-600 border-rose-600 enabled:hover:bg-rose-600 enabled:hover:text-zinc-200 enabled:active:bg-rose-600 disabled:text-stone-600 disabled:border-stone-600 bg-inherit rounded-md w-[8ch] h-[3ch] text-center transition-colors ease-in-out duration-300"
-              type="button"
-              disabled={result !== Result.None}
-              onClick={() => {
-                setAttempts([...attempts, null]);
-                setGuess("");
-                if (attempts.length === 4) {
-                  setGuess("　");
-                  setResult(Result.Lose);
-                }
-              }}
-            >
-              スキップ
-            </Button>
-          </form>
-          <div className="flex flex-row justify-start items-center gap-6 h-[2ch]">
-            {attempts.length ? (
-              attempts.map((x, i) => (
-                <div
-                  key={String(x) + i}
-                  className={clsx(
-                    "flex flex-row justify-center items-center",
-                    x === query.data.answer ? "text-green-600" : "text-red-600"
-                  )}
-                >
-                  {x === query.data.answer ? (
-                    <span className="scale-75">✔</span>
-                  ) : (
-                    <span className="-translate-y-0.5">⨯</span>
-                  )}
-                  {x ?? (
-                    <div className="grid grid-rows-2 grid-cols-2 text-xs">
-                      <div>ス</div>
-                      <div>キ</div>
-                      <div>ッ</div>
-                      <div>プ</div>
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="text-sm text-stone-600">
-                回答とスキップはここに記録します
-              </div>
-            )}
-          </div>
-        </>
+        <Coin puzzle={query.data} showExtra={attempts.length} result={result} />
       ) : (
-        <>
-          <CoinPlaceholder />
-          {query.isLoading ? "読込中" : "エラー"}
-        </>
+        <CoinPlaceholder />
       )}
+      <form
+        className="flex flex-row gap-4 justify-center items-center"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!query.isSuccess) {
+            return;
+          }
+          if (!/^\p{Script=Han}$/u.test(guess)) {
+            toast(
+              <CustomToast type="warn">
+                漢字１文字を入力してください
+              </CustomToast>,
+              {
+                id: "invalid-input",
+              }
+            );
+          } else if (attempts.includes(guess)) {
+            toast(
+              <CustomToast type="warn">
+                この漢字はすでに回答しました
+              </CustomToast>,
+              {
+                id: "repeated-input",
+              }
+            );
+          } else if (guess === query.data.answer) {
+            setAttempts([...attempts, guess]);
+            setGuess("　");
+            setResult(Result.Win);
+          } else if (guess !== query.data?.answer) {
+            setAttempts([...attempts, guess]);
+            setGuess("");
+            if (attempts.length === 4) {
+              setGuess("　");
+              setResult(Result.Lose);
+            }
+          }
+        }}
+      >
+        <div className="flex flex-row justify-center items-center">
+          <Input
+            name="answer"
+            type="text"
+            autoComplete="off"
+            className="z-10 border border-r-0 border-zinc-600 disabled:border-stone-600 bg-inherit rounded-md rounded-r-none w-[10ch] lg:w-[14ch] h-[3ch] text-center outline outline-2 outline-transparent focus:outline-blue-400 transition-colors ease-in-out duration-300 disabled:placeholder:opacity-0"
+            disabled={result !== Result.None}
+            value={guess}
+            placeholder="✏１文字"
+            onChange={(e) => setGuess(e.target.value)}
+          ></Input>
+          <Button
+            className="border text-emerald-600 border-emerald-600 enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 disabled:text-stone-600 disabled:border-stone-600 bg-inherit rounded-md rounded-l-none w-[5ch] h-[3ch] text-center transition-colors ease-in-out duration-300"
+            type="submit"
+            disabled={result !== Result.None}
+          >
+            決定
+          </Button>
+        </div>
+        <Button
+          className="border text-rose-600 border-rose-600 enabled:hover:bg-rose-600 enabled:hover:text-zinc-200 enabled:active:bg-rose-600 disabled:text-stone-600 disabled:border-stone-600 bg-inherit rounded-md w-[8ch] h-[3ch] text-center transition-colors ease-in-out duration-300"
+          type="button"
+          disabled={result !== Result.None}
+          onClick={() => {
+            if (!query.isSuccess) {
+              return;
+            }
+            setAttempts([...attempts, null]);
+            setGuess("");
+            if (attempts.length === 4) {
+              setGuess("　");
+              setResult(Result.Lose);
+            }
+          }}
+        >
+          スキップ
+        </Button>
+      </form>
+      <div className="flex flex-row justify-start items-center gap-6 h-[2ch]">
+        {query.isSuccess ? (
+          attempts.length ? (
+            attempts.map((x, i) => (
+              <div
+                key={String(x) + i}
+                className={clsx(
+                  "flex flex-row justify-center items-center",
+                  x === query.data.answer ? "text-green-600" : "text-red-600"
+                )}
+              >
+                {x === query.data.answer ? (
+                  <span className="scale-75">✔</span>
+                ) : (
+                  <span className="-translate-y-0.5">⨯</span>
+                )}
+                {x ?? (
+                  <div className="grid grid-rows-2 grid-cols-2 text-xs">
+                    <div>ス</div>
+                    <div>キ</div>
+                    <div>ッ</div>
+                    <div>プ</div>
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <div className="text-sm text-stone-600">
+              回答とスキップはここに記録します
+            </div>
+          )
+        ) : query.isLoading ? (
+          <div className="text-sm text-stone-600">読込中…</div>
+        ) : query.isError ? (
+          <div className="text-sm font-mono text-rose-600">
+            {query.error.message}
+          </div>
+        ) : (
+          <div className="text-sm text-rose-600">エラー</div>
+        )}
+      </div>
       <Disclosure
         as="div"
         className="flex flex-col justify-center items-center"
