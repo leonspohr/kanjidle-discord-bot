@@ -3,7 +3,7 @@ import { diffName, fetchToday, Loc } from "./query/api";
 import { useEffect, useState } from "react";
 import Coin from "./components/Coin";
 import { Result } from "./Result";
-import { DateTime } from "ts-luxon";
+import { DateTime, Duration } from "ts-luxon";
 import CoinPlaceholder from "./components/CoinPlaceholder";
 import confetti from "canvas-confetti";
 import {
@@ -40,22 +40,19 @@ function App() {
 
   const [guess, setGuess] = useState("");
 
-  const [diff, setDiff] = useState<string>(
+  const [diff, setDiff] = useState<Duration>(
     DateTime.utc()
       .startOf("day")
       .plus({ days: 1 })
       .diffNow(["hours", "minutes", "seconds"])
-      .toFormat("hh:mm:ss")
   );
 
   useEffect(() => {
     if (result !== Result.None) {
+      const nextDay = DateTime.utc().startOf("day").plus({ days: 1 });
       const interval = setInterval(() => {
-        const diff = DateTime.utc()
-          .startOf("day")
-          .plus({ days: 1 })
-          .diffNow(["hours", "minutes", "seconds"]);
-        setDiff(diff.toFormat("hh:mm:ss"));
+        const diff = nextDay.diffNow(["hours", "minutes", "seconds"]);
+        setDiff(diff);
         if (diff.toMillis() <= 0) {
           window.location.reload();
         }
@@ -136,8 +133,14 @@ function App() {
               コピーする
             </Button>
             <p className="text-sm text-center mx-4">
-              次のパズルは
-              {diff}後
+              {diff.toMillis() <= 0 ? (
+                <>ページをリフレッシュください</>
+              ) : (
+                <>
+                  次のパズルは
+                  {diff.toFormat("hh:mm:ss")}後
+                </>
+              )}
             </p>
           </div>
         )}
