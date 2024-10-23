@@ -1,17 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import { diffName, fetchToday, Loc } from "./query/api";
-import { useEffect, useState } from "react";
-import Coin from "./components/Coin";
-import { Result } from "./Result";
-import { DateTime, Duration } from "ts-luxon";
-import CoinPlaceholder from "./components/CoinPlaceholder";
-import confetti from "canvas-confetti";
-import {
-  useJSONLocalStorage,
-  useParsedLocalStorage,
-} from "./hooks/useLocalStorage";
-import clsx from "clsx";
-import CoinExample from "./components/CoinExample";
 import {
   Button,
   Disclosure,
@@ -19,10 +5,25 @@ import {
   DisclosurePanel,
   Input,
 } from "@headlessui/react";
-import { BiSolidDownArrow, BiSolidRightArrow } from "react-icons/bi";
+import { useQuery } from "@tanstack/react-query";
+import confetti from "canvas-confetti";
+import clsx from "clsx";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { BiSolidDownArrow, BiSolidRightArrow } from "react-icons/bi";
+import { DateTime, Duration } from "ts-luxon";
+
+import Coin from "./components/Coin";
+import CoinExample from "./components/CoinExample";
+import CoinPlaceholder from "./components/CoinPlaceholder";
 import CustomToast from "./components/CustomToast";
 import CustomToaster from "./components/CustomToaster";
+import {
+  useJSONLocalStorage,
+  useParsedLocalStorage,
+} from "./hooks/useLocalStorage";
+import { diffName, fetchToday, Loc } from "./query/api";
+import { Result } from "./Result";
 
 function App() {
   const query = useQuery({
@@ -33,12 +34,12 @@ function App() {
 
   const [attempts, setAttempts] = useJSONLocalStorage<(string | null)[]>(
     "attempts",
-    []
+    [],
   );
 
   const [result, setResult] = useJSONLocalStorage<Result>(
     "result",
-    Result.None
+    Result.None,
   );
 
   const [guess, setGuess] = useState("");
@@ -47,7 +48,7 @@ function App() {
     DateTime.utc()
       .startOf("day")
       .plus({ days: 1 })
-      .diffNow(["hours", "minutes", "seconds"])
+      .diffNow(["hours", "minutes", "seconds"]),
   );
 
   useEffect(() => {
@@ -68,7 +69,7 @@ function App() {
     "lastPlayed",
     DateTime.utc().startOf("day"),
     (s) => DateTime.fromMillis(Number(s), { zone: "utc" }),
-    (v) => v.toMillis().toString()
+    (v) => v.toMillis().toString(),
   );
 
   useEffect(() => {
@@ -92,10 +93,10 @@ function App() {
   }, [query.isError, query.isPending, result]);
 
   return (
-    <div className="flex flex-col container mx-auto my-4 justify-center items-center gap-4 text-2xl lg:text-3xl xl:text-4xl">
+    <div className="container mx-auto my-4 flex flex-col items-center justify-center gap-4 text-2xl lg:text-3xl xl:text-4xl">
       {import.meta.env.DEV && (
         <Button
-          className="absolute top-0 left-0 text-base"
+          className="absolute left-0 top-0 text-base"
           onClick={() => {
             setAttempts([]);
             setResult(Result.None);
@@ -116,34 +117,34 @@ function App() {
       <div
         className={clsx(
           "grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out",
-          query.isSuccess && result !== Result.None && "grid-rows-[1fr]"
+          query.isSuccess && result !== Result.None && "grid-rows-[1fr]",
         )}
       >
         {query.isSuccess && result !== Result.None && (
-          <div className="flex flex-col justify-center items-center gap-4 overflow-y-hidden">
+          <div className="flex flex-col items-center justify-center gap-4 overflow-y-hidden">
             <Button
-              className="bg-inherit border enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 border-zinc-600 disabled:border-stone-600 rounded-lg w-[14ch] h-[3ch] text-xl lg:text-2xl xl:text-3xl text-center"
+              className="h-[3ch] w-[14ch] rounded-lg border border-zinc-600 bg-inherit text-center text-xl enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600 lg:text-2xl xl:text-3xl"
               onClick={() => {
                 void window.navigator.clipboard.writeText(
                   `Kanjidle (Beta) ${DateTime.utc().toFormat("yyyy-LL-dd")} ${
                     result === Result.Lose ? "X" : attempts.length
                   }/5\n` +
                     score(attempts.length, result) +
-                    `\nhttps://kanjidle.onecomp.one`
+                    `\nhttps://kanjidle.onecomp.one`,
                 );
                 toast(
                   <CustomToast type="success">コピーしました</CustomToast>,
                   {
                     id: "copy",
-                  }
+                  },
                 );
               }}
             >
               コピーする
             </Button>
-            <p className="text-sm text-center mx-4">
+            <p className="mx-4 text-center text-sm">
               {diff.toMillis() <= 0 ? (
-                <>ページをリフレッシュください</>
+                <>ページをリフレッシュしてください</>
               ) : (
                 <>
                   次のパズルは
@@ -160,7 +161,7 @@ function App() {
         <CoinPlaceholder />
       )}
       <form
-        className="flex flex-row gap-4 justify-center items-center"
+        className="flex flex-row items-center justify-center gap-4"
         onSubmit={(e) => {
           e.preventDefault();
           if (!query.isSuccess) {
@@ -173,7 +174,7 @@ function App() {
               </CustomToast>,
               {
                 id: "invalid-input",
-              }
+              },
             );
           } else if (attempts.includes(guess)) {
             toast(
@@ -182,7 +183,7 @@ function App() {
               </CustomToast>,
               {
                 id: "repeated-input",
-              }
+              },
             );
           } else if (guess === query.data.answer) {
             setAttempts([...attempts, guess]);
@@ -198,19 +199,19 @@ function App() {
           }
         }}
       >
-        <div className="flex flex-row justify-center items-center">
+        <div className="flex flex-row items-center justify-center">
           <Input
             name="answer"
             type="text"
             autoComplete="off"
-            className="z-10 border border-r-0 border-zinc-600 disabled:border-stone-600 bg-inherit rounded-md rounded-r-none w-[10ch] lg:w-[14ch] h-[3ch] text-center outline outline-2 outline-transparent focus:outline-blue-400 transition-colors ease-in-out duration-300 disabled:placeholder:opacity-0"
+            className="z-10 h-[3ch] w-[10ch] rounded-md rounded-r-none border border-r-0 border-zinc-600 bg-inherit text-center outline outline-2 outline-transparent transition-colors duration-300 ease-in-out focus:outline-blue-400 disabled:border-stone-600 disabled:placeholder:opacity-0 lg:w-[14ch]"
             disabled={result !== Result.None}
             value={guess}
             placeholder="✏１文字"
             onChange={(e) => setGuess(e.target.value)}
           ></Input>
           <Button
-            className="border text-emerald-600 border-emerald-600 enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 disabled:text-stone-600 disabled:border-stone-600 bg-inherit rounded-md rounded-l-none w-[5ch] h-[3ch] text-center transition-colors ease-in-out duration-300"
+            className="h-[3ch] w-[5ch] rounded-md rounded-l-none border border-emerald-600 bg-inherit text-center text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 disabled:border-stone-600 disabled:text-stone-600"
             type="submit"
             disabled={result !== Result.None}
           >
@@ -218,7 +219,7 @@ function App() {
           </Button>
         </div>
         <Button
-          className="border text-rose-600 border-rose-600 enabled:hover:bg-rose-600 enabled:hover:text-zinc-200 enabled:active:bg-rose-600 disabled:text-stone-600 disabled:border-stone-600 bg-inherit rounded-md w-[8ch] h-[3ch] text-center transition-colors ease-in-out duration-300"
+          className="h-[3ch] w-[8ch] rounded-md border border-rose-600 bg-inherit text-center text-rose-600 transition-colors duration-300 ease-in-out enabled:hover:bg-rose-600 enabled:hover:text-zinc-200 enabled:active:bg-rose-600 disabled:border-stone-600 disabled:text-stone-600"
           type="button"
           disabled={result !== Result.None}
           onClick={() => {
@@ -236,15 +237,15 @@ function App() {
           スキップ
         </Button>
       </form>
-      <div className="flex flex-row justify-start items-center gap-6 h-[2ch]">
+      <div className="flex h-[2ch] flex-row items-center justify-start gap-6">
         {query.isSuccess ? (
           attempts.length ? (
             attempts.map((x, i) => (
               <div
                 key={String(x) + i}
                 className={clsx(
-                  "flex flex-row justify-center items-center",
-                  x === query.data.answer ? "text-green-600" : "text-red-600"
+                  "flex flex-row items-center justify-center",
+                  x === query.data.answer ? "text-green-600" : "text-red-600",
                 )}
               >
                 {x === query.data.answer ? (
@@ -253,7 +254,7 @@ function App() {
                   <span className="-translate-y-0.5">⨯</span>
                 )}
                 {x ?? (
-                  <div className="grid grid-rows-2 grid-cols-2 text-xs">
+                  <div className="grid grid-cols-2 grid-rows-2 text-xs">
                     <div>ス</div>
                     <div>キ</div>
                     <div>ッ</div>
@@ -270,7 +271,7 @@ function App() {
         ) : query.isLoading ? (
           <div className="text-sm text-stone-600">読込中…</div>
         ) : query.isError ? (
-          <div className="text-sm font-mono text-rose-600">
+          <div className="font-mono text-sm text-rose-600">
             {query.error.message}
           </div>
         ) : (
@@ -279,13 +280,13 @@ function App() {
       </div>
       <Disclosure
         as="div"
-        className="flex flex-col justify-center items-center"
+        className="flex flex-col items-center justify-center"
       >
         <DisclosureButton
           className={({ open }) =>
             clsx(
-              "flex flex-row justify-start items-center bg-inherit border enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 border-zinc-600 disabled:border-stone-600 rounded-lg w-[30ch] h-[3ch] px-2 text-xl lg:text-2xl xl:text-3xl",
-              open && "border-b-1 rounded-b-none"
+              "flex h-[3ch] w-[30ch] flex-row items-center justify-start rounded-lg border border-zinc-600 bg-inherit px-2 text-xl enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600 lg:text-2xl xl:text-3xl",
+              open && "border-b-1 rounded-b-none",
             )
           }
         >
@@ -298,11 +299,11 @@ function App() {
         </DisclosureButton>
         <DisclosurePanel
           transition
-          className="transition origin-top duration-300 ease-out data-[closed]:-translate-y-6 data-[closed]:opacity-0 w-[30ch] text-xl lg:text-2xl xl:text-3xl border border-t-0 border-zinc-600 rounded-lg rounded-t-none"
+          className="w-[30ch] origin-top rounded-lg rounded-t-none border border-t-0 border-zinc-600 text-xl transition duration-300 ease-out data-[closed]:-translate-y-6 data-[closed]:opacity-0 lg:text-2xl xl:text-3xl"
         >
           <div
             className={clsx(
-              "flex flex-col justify-center items-center text-base text-center my-4 mx-2 gap-4"
+              "mx-2 my-4 flex flex-col items-center justify-center gap-4 text-center text-base",
             )}
           >
             <CoinExample puzzle={example} showExtra={0} />

@@ -2,7 +2,7 @@ import clsx from "clsx";
 
 export default function CoinPlaceholder() {
   return (
-    <div className="grid grid-areas-coin grid-cols-coin grid-rows-coin place-items-center select-none">
+    <div className="grid select-none grid-cols-coin grid-rows-coin place-items-center grid-areas-coin">
       {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
         <div
           key={i}
@@ -12,12 +12,12 @@ export default function CoinPlaceholder() {
               "grid-in-a2",
               "grid-in-a3",
               "grid-in-a4",
-              "grid-in-a5 translate-x-1.5 translate-y-1.5",
-              "grid-in-a6 -translate-x-1.5 translate-y-1.5",
-              "grid-in-a7 -translate-x-1.5 -translate-y-1.5",
-              "grid-in-a8 translate-x-1.5 -translate-y-1.5",
+              "translate-x-1.5 translate-y-1.5 grid-in-a5",
+              "-translate-x-1.5 translate-y-1.5 grid-in-a6",
+              "-translate-x-1.5 -translate-y-1.5 grid-in-a7",
+              "-translate-y-1.5 translate-x-1.5 grid-in-a8",
             ][i],
-            "text-2xl"
+            "text-2xl",
           )}
         >
           <span className="blur-sm">{"│─│─╲╱╲╱"[i]}</span>
@@ -32,19 +32,19 @@ export default function CoinPlaceholder() {
               "grid-in-w2",
               "grid-in-w3",
               "grid-in-w4",
-              "grid-in-w5 place-self-end",
-              "grid-in-w6 justify-self-start self-end",
-              "grid-in-w7 place-self-start",
-              "grid-in-w8 justify-self-end self-start",
+              "place-self-end grid-in-w5",
+              "self-end justify-self-start grid-in-w6",
+              "place-self-start grid-in-w7",
+              "self-start justify-self-end grid-in-w8",
             ][i],
-            "text-4xl"
+            "text-4xl",
           )}
         >
           <span className="blur">何</span>
           <span> </span>
         </div>
       ))}
-      <div className={clsx("grid-in-qq text-5xl")}>
+      <div className={clsx("text-5xl grid-in-qq")}>
         <span>？</span>
         <span> </span>
       </div>

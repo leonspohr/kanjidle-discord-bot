@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 
 export default function useLocalStorage(
   key: string,
-  initial: string
+  initial: string,
 ): [string, (newValue: string) => void, () => void] {
   const first =
     localStorage.getItem(key) ??
@@ -16,20 +16,20 @@ export default function useLocalStorage(
       localStorage.setItem(key, newValue);
       setValue_(newValue);
     },
-    [key]
+    [key],
   );
   return [value, setValue, () => localStorage.removeItem(key)];
 }
 
 export function useJSONLocalStorage<T>(
   key: string,
-  initial: T
+  initial: T,
 ): [T, (newValue: T) => void, () => void] {
   return useParsedLocalStorage(
     key,
     initial,
     JSON.parse as (s: string) => T,
-    JSON.stringify
+    JSON.stringify,
   );
 }
 
@@ -37,7 +37,7 @@ export function useParsedLocalStorage<T>(
   key: string,
   initial: T,
   parse: (s: string) => T,
-  stringify: (v: T) => string
+  stringify: (v: T) => string,
 ): [T, (newValue: T) => void, () => void] {
   const first = localStorage.getItem(key)
     ? parse(localStorage.getItem(key)!)
@@ -51,7 +51,7 @@ export function useParsedLocalStorage<T>(
       localStorage.setItem(key, stringify(newValue));
       setValue_(newValue);
     },
-    [key, stringify]
+    [key, stringify],
   );
   return [value, setValue, () => localStorage.removeItem(key)];
 }

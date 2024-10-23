@@ -28,7 +28,7 @@ export async function fetchToday(): Promise<ResPuzzleHidden> {
     import.meta.env.VITE_API_URL + "/v1/today?mode=hidden",
     {
       method: "GET",
-    }
+    },
   );
   return (await r.json()) as ResPuzzleHidden;
 }
@@ -38,7 +38,7 @@ export function pretty(hints: ResHint[], answer?: string): string {
     .map((h) =>
       h.answer == Loc.L
         ? `${answer ?? "◯"}${h.hint}`
-        : `${h.hint}${answer ?? "◯"}`
+        : `${h.hint}${answer ?? "◯"}`,
     )
     .join("　");
 }

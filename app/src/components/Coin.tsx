@@ -1,4 +1,5 @@
 import clsx from "clsx";
+
 import { Loc, ResPuzzleHidden } from "../query/api";
 import { Result } from "../Result";
 
@@ -10,7 +11,7 @@ export interface CoinProps {
 
 export default function Coin({ puzzle, showExtra, result }: CoinProps) {
   return (
-    <div className="grid grid-areas-coin grid-cols-coin grid-rows-coin place-items-center select-none">
+    <div className="grid select-none grid-cols-coin grid-rows-coin place-items-center grid-areas-coin">
       {puzzle.hints.concat(puzzle.extra_hints).map((w, i) => (
         <div
           key={w.hint + w.answer}
@@ -20,21 +21,21 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
               "grid-in-a2",
               "grid-in-a3",
               "grid-in-a4",
-              "grid-in-a5 translate-x-1.5 translate-y-1.5",
-              "grid-in-a6 -translate-x-1.5 translate-y-1.5",
-              "grid-in-a7 -translate-x-1.5 -translate-y-1.5",
-              "grid-in-a8 translate-x-1.5 -translate-y-1.5",
+              "translate-x-1.5 translate-y-1.5 grid-in-a5",
+              "-translate-x-1.5 translate-y-1.5 grid-in-a6",
+              "-translate-x-1.5 -translate-y-1.5 grid-in-a7",
+              "-translate-y-1.5 translate-x-1.5 grid-in-a8",
             ][i],
             "text-2xl",
             result === Result.None && showExtra + 4 <= i && "blur",
-            "transition-all ease-in-out duration-300"
+            "transition-all duration-300 ease-in-out",
           )}
         >
           {result === Result.None && showExtra + 4 <= i
             ? "╲╱╲╱"[i - 4]
             : w.answer === Loc.L
-            ? "↑→↓←↖↗↘↙"[i]
-            : "↓←↑→↘↙↖↗"[i]}
+              ? "↑→↓←↖↗↘↙"[i]
+              : "↓←↑→↘↙↖↗"[i]}
         </div>
       ))}
       {puzzle.hints.concat(puzzle.extra_hints).map((w, i) => (
@@ -57,15 +58,15 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
               "grid-in-w2",
               "grid-in-w3",
               "grid-in-w4",
-              "grid-in-w5 place-self-end",
-              "grid-in-w6 justify-self-start self-end",
-              "grid-in-w7 place-self-start",
-              "grid-in-w8 justify-self-end self-start",
+              "place-self-end grid-in-w5",
+              "self-end justify-self-start grid-in-w6",
+              "place-self-start grid-in-w7",
+              "self-start justify-self-end grid-in-w8",
             ][i],
             "text-4xl",
             result !== Result.None && "text-blue-500 underline",
             result === Result.None && showExtra + 4 <= i && "blur",
-            "transition-all ease-in-out duration-300"
+            "transition-all duration-300 ease-in-out",
           )}
         >
           {result === Result.None && showExtra + 4 <= i ? "何" : w.hint}
@@ -83,9 +84,9 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
         target="_blank"
         rel="noopener noreferrer"
         className={clsx(
-          "grid-in-qq text-5xl",
+          "text-5xl grid-in-qq",
           result === Result.Win && "text-green-600 underline",
-          result === Result.Lose && "text-red-600 underline"
+          result === Result.Lose && "text-red-600 underline",
         )}
       >
         {result === Result.None ? "？" : puzzle.answer}&#x000A;
