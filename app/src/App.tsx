@@ -21,13 +21,7 @@ import CustomToast from "./components/CustomToast";
 import CustomToaster from "./components/CustomToaster";
 import { db, GameStateKey } from "./db/db";
 import { Result } from "./db/Result";
-import { Difficulty, fetchToday, Loc } from "./query/api";
-
-export interface State {
-  attempts: (string | null)[];
-  result: Result;
-  lastPlayed: number;
-}
+import { Difficulty, fetchToday, Loc, Mode } from "./query/api";
 
 function App() {
   const today = DateTime.utc().startOf("day");
@@ -36,13 +30,12 @@ function App() {
     queryKey: ["hidden", "today"],
     queryFn: async () => {
       const res = await fetchToday();
-      const key = {
-        mode: "hidden",
+      const key: GameStateKey = {
+        mode: Mode.Hidden,
         difficulty: res.difficulty,
         date: +today,
-      } as GameStateKey;
-      const d = await db.game_states.get(key);
-      if (!d) {
+      };
+      if ((await db.game_states.get(key)) == null) {
         await db.game_states.put({
           ...key,
           attempts: [],
@@ -54,17 +47,17 @@ function App() {
     staleTime: Infinity,
   });
 
-  const game = useMemo(
-    () =>
-      query.isSuccess
-        ? ({
-            mode: "hidden",
-            difficulty: query.data.difficulty,
-            date: +today,
-          } as GameStateKey)
-        : null,
-    [query.isSuccess, query.data?.difficulty, today],
-  );
+  const game = useMemo(() => {
+    if (query.isSuccess) {
+      const key: GameStateKey = {
+        mode: Mode.Hidden,
+        difficulty: query.data.difficulty,
+        date: +today,
+      };
+      return key;
+    }
+    return null;
+  }, [query.isSuccess, query.data?.difficulty, today]);
 
   const state = useLiveQuery(
     async () => (game ? await db.game_states.get(game) : null),
@@ -78,7 +71,7 @@ function App() {
   );
 
   useEffect(() => {
-    if (state?.result != null && state.result !== Result.None) {
+    if (isFullyLoaded && state.result !== Result.None) {
       const nextDay = today.plus({ days: 1 });
       const interval = setInterval(() => {
         const diff = nextDay.diffNow(["hours", "minutes", "seconds"]);
@@ -89,7 +82,7 @@ function App() {
       }, 1_000);
       return () => clearInterval(interval);
     }
-  }, [state?.result, today]);
+  }, [isFullyLoaded, state?.result, today]);
 
   useEffect(() => {
     if (isFullyLoaded) {
