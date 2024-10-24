@@ -108,7 +108,7 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
     pub fn find_usable_hints(&self, answer: Ji, options: &PuzzleOptions) -> Vec<Hint> {
         self.word_data
             .twos
-            .iter()
+            .values()
             .skip_while(|x| x.word.rank < options.word_rarity_range.start)
             .take_while(|x| x.word.rank < options.word_rarity_range.end)
             .filter_map(|two| {
@@ -206,11 +206,11 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
                     && hints.iter().all(|x| match x.answer_location {
                         Loc::L => {
                             let key = String::from_iter(&[k.0, x.hint.0]);
-                            self.word_data.two_keys.contains(&key)
+                            self.word_data.twos.contains_key(&key)
                         }
                         Loc::R => {
                             let key = String::from_iter(&[x.hint.0, k.0]);
-                            self.word_data.two_keys.contains(&key)
+                            self.word_data.twos.contains_key(&key)
                         }
                     })
             })

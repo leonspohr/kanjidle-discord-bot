@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeMap, BTreeSet},
+    collections::BTreeMap,
     fmt::Display,
     fs::File,
     io::{BufWriter, Write},
@@ -233,8 +233,7 @@ pub struct Compound2 {
 
 #[derive(Debug)]
 pub struct WordData {
-    pub twos: Vec<Compound2>,
-    pub two_keys: BTreeSet<String>,
+    pub twos: IndexMap<String, Compound2>,
 }
 
 pub fn load_words(kanji_data: &KanjiData) -> Result<WordData> {
@@ -246,16 +245,19 @@ pub fn load_words(kanji_data: &KanjiData) -> Result<WordData> {
                 let mut chars = word.text.chars();
                 let a = chars.next()?.into();
                 let b = chars.exactly_one().ok()?.into();
-                Some(Compound2 {
-                    a,
-                    b,
-                    irregular: is_reading_irregular(
-                        &word.text,
-                        kanji_data.kanji_metas.get(&a)?,
-                        kanji_data.kanji_metas.get(&b)?,
-                    ),
-                    word,
-                })
+                Some((
+                    word.text.clone(),
+                    Compound2 {
+                        a,
+                        b,
+                        irregular: is_reading_irregular(
+                            &word.text,
+                            kanji_data.kanji_metas.get(&a)?,
+                            kanji_data.kanji_metas.get(&b)?,
+                        ),
+                        word,
+                    },
+                ))
             })
             .collect()
         })?
@@ -263,9 +265,10 @@ pub fn load_words(kanji_data: &KanjiData) -> Result<WordData> {
         let mut rdr = csv::ReaderBuilder::new()
             .delimiter(b'\t')
             .from_path(ASSET_WORDS)?;
-        let twos = rdr
-            .records()
-            .filter_map_ok(|x| {
+        let mut twos = IndexMap::new();
+        for x in rdr.records() {
+            let x = x?;
+            let two = (|| {
                 let word = Word {
                     text: x.get(0)?.into(),
                     reading: x.get(1)?.into(),
@@ -288,14 +291,17 @@ pub fn load_words(kanji_data: &KanjiData) -> Result<WordData> {
                         word,
                     })
                 }
-            })
-            .map(|x| x.map_err(anyhow::Error::from))
-            .collect::<Result<Vec<_>>>()?;
-
+            })();
+            if let Some(two) = two {
+                if !twos.contains_key(&two.word.text) {
+                    twos.insert(two.word.text.clone(), two);
+                }
+            }
+        }
         tracing::info!("Writing generated words file...");
         let file = File::create(GENERATED_WORDS)?;
         let mut writer = csv::Writer::from_writer(BufWriter::new(file));
-        for two in &twos {
+        for two in twos.values() {
             writer.serialize(&two.word)?;
         }
         writer.flush()?;
@@ -303,8 +309,7 @@ pub fn load_words(kanji_data: &KanjiData) -> Result<WordData> {
         twos
     };
 
-    let two_keys = twos.iter().map(|t| t.word.text.clone()).collect();
-    Ok(WordData { twos, two_keys })
+    Ok(WordData { twos })
 }
 
 // Very rudimentary method of doing this but it should be fine
