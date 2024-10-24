@@ -1,5 +1,5 @@
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, HashSet},
     fmt::Display,
     fs::File,
     io::{BufWriter, Write},
@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 static ASSET_KANJIS: &str = "assets/wikipedia_kanjis.csv";
 static ASSET_KANJI_METAS: &str = "assets/kanjiten.json";
 static ASSET_WORDS: &str = "assets/jpdb_words.csv";
+static ASSET_NAMES: &str = "assets/jmnedict.json";
 
 static GENERATED_KANJIS: &str = "generated/kanjis.csv";
 static GENERATED_KANJI_METAS: &str = "generated/kanji_metas.json";
@@ -236,6 +237,21 @@ pub struct WordData {
     pub twos: IndexMap<String, Compound2>,
 }
 
+#[derive(Debug, Deserialize)]
+struct Jmnedict {
+    words: Vec<JmnedictWord>,
+}
+
+#[derive(Debug, Deserialize)]
+struct JmnedictWord {
+    kanji: Vec<JmnedictKanji>,
+}
+
+#[derive(Debug, Deserialize)]
+struct JmnedictKanji {
+    text: String,
+}
+
 pub fn load_words(kanji_data: &KanjiData) -> Result<WordData> {
     let twos = if let Ok(file) = File::open(GENERATED_WORDS) {
         tracing::info!("Reading words from generated file...");
@@ -262,6 +278,17 @@ pub fn load_words(kanji_data: &KanjiData) -> Result<WordData> {
             .collect()
         })?
     } else {
+        let file_names = File::open(ASSET_NAMES)?;
+        let parsed: Jmnedict = serde_json::from_reader(file_names)?;
+        let mut names = HashSet::with_capacity(700000);
+        names.extend(
+            parsed
+                .words
+                .into_iter()
+                .flat_map(|w| w.kanji.into_iter().map(|k| k.text)),
+        );
+        names.shrink_to_fit();
+
         let mut rdr = csv::ReaderBuilder::new()
             .delimiter(b'\t')
             .from_path(ASSET_WORDS)?;
@@ -274,22 +301,26 @@ pub fn load_words(kanji_data: &KanjiData) -> Result<WordData> {
                     reading: x.get(1)?.into(),
                     rank: x.get(2)?.parse().ok()?,
                 };
-                let (_, [a, b]) = TWO_KANJI.captures(&word.text)?.extract();
-                if a == b || b == "々" {
+                if names.contains(&word.text) {
                     None
                 } else {
-                    let a = extract_only_char(a)?.into();
-                    let b = extract_only_char(b)?.into();
-                    Some(Compound2 {
-                        a,
-                        b,
-                        irregular: is_reading_irregular(
-                            &word.text,
-                            kanji_data.kanji_metas.get(&a)?,
-                            kanji_data.kanji_metas.get(&b)?,
-                        ),
-                        word,
-                    })
+                    let (_, [a, b]) = TWO_KANJI.captures(&word.text)?.extract();
+                    if a == b || b == "々" {
+                        None
+                    } else {
+                        let a = extract_only_char(a)?.into();
+                        let b = extract_only_char(b)?.into();
+                        Some(Compound2 {
+                            a,
+                            b,
+                            irregular: is_reading_irregular(
+                                &word.text,
+                                kanji_data.kanji_metas.get(&a)?,
+                                kanji_data.kanji_metas.get(&b)?,
+                            ),
+                            word,
+                        })
+                    }
                 }
             })();
             if let Some(two) = two {
