@@ -26,7 +26,7 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
               "-translate-x-1.5 -translate-y-1.5 grid-in-a7",
               "-translate-y-1.5 translate-x-1.5 grid-in-a8",
             ][i],
-            "text-2xl",
+            "text-4xl",
             result === Result.None && showExtra + 4 <= i && "blur",
             "transition-all duration-300 ease-in-out",
           )}
@@ -58,12 +58,12 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
               "grid-in-w2",
               "grid-in-w3",
               "grid-in-w4",
-              "place-self-end grid-in-w5",
-              "self-end justify-self-start grid-in-w6",
-              "place-self-start grid-in-w7",
-              "self-start justify-self-end grid-in-w8",
+              "translate-x-1.5 translate-y-1.5 place-self-end grid-in-w5",
+              "-translate-x-1.5 translate-y-1.5 self-end justify-self-start grid-in-w6",
+              "-translate-x-1.5 -translate-y-1.5 place-self-start grid-in-w7",
+              "-translate-y-1.5 translate-x-1.5 self-start justify-self-end grid-in-w8",
             ][i],
-            "text-4xl",
+            "text-5xl",
             result !== Result.None && "text-blue-500 underline",
             result === Result.None && showExtra + 4 <= i && "blur",
             "transition-all duration-300 ease-in-out",
@@ -84,7 +84,7 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
         target="_blank"
         rel="noopener noreferrer"
         className={clsx(
-          "text-5xl grid-in-qq",
+          "text-6xl grid-in-qq",
           result === Result.Win && "text-green-600 underline",
           result === Result.Lose && "text-red-600 underline",
         )}
