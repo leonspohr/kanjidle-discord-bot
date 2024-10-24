@@ -15,6 +15,11 @@ export enum Loc {
   R = "R",
 }
 
+export enum Mode {
+  Classic = "classic",
+  Hidden = "hidden",
+}
+
 export enum Difficulty {
   Simple = "simple",
   Easy = "easy",
@@ -41,19 +46,4 @@ export function pretty(hints: ResHint[], answer?: string): string {
         : `${h.hint}${answer ?? "◯"}`,
     )
     .join("　");
-}
-
-export function diffName(d: Difficulty): string {
-  switch (d) {
-    case Difficulty.Simple:
-      return "絵本級・Simple";
-    case Difficulty.Easy:
-      return "童話級・Easy";
-    case Difficulty.Normal:
-      return "漫画級・Normal";
-    case Difficulty.Hard:
-      return "芝居級・Hard";
-    case Difficulty.Lunatic:
-      return "奇譚級・Lunatic";
-  }
 }

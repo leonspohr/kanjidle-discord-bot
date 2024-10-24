@@ -1,7 +1,7 @@
 import clsx from "clsx";
 
+import { Result } from "../db/Result";
 import { Loc, ResPuzzleHidden } from "../query/api";
-import { Result } from "../Result";
 
 export interface CoinProps {
   puzzle: ResPuzzleHidden;

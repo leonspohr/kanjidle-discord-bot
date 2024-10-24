@@ -8,7 +8,8 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import confetti from "canvas-confetti";
 import clsx from "clsx";
-import { useEffect, useState } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { BiSolidDownArrow, BiSolidRightArrow } from "react-icons/bi";
 import { DateTime, Duration } from "ts-luxon";
@@ -18,42 +19,67 @@ import CoinExample from "./components/CoinExample";
 import CoinPlaceholder from "./components/CoinPlaceholder";
 import CustomToast from "./components/CustomToast";
 import CustomToaster from "./components/CustomToaster";
-import {
-  useJSONLocalStorage,
-  useParsedLocalStorage,
-} from "./hooks/useLocalStorage";
-import { diffName, fetchToday, Loc } from "./query/api";
-import { Result } from "./Result";
+import { db, GameStateKey } from "./db/db";
+import { Result } from "./db/Result";
+import { Difficulty, fetchToday, Loc } from "./query/api";
+
+export interface State {
+  attempts: (string | null)[];
+  result: Result;
+  lastPlayed: number;
+}
 
 function App() {
+  const today = DateTime.utc().startOf("day");
+
   const query = useQuery({
-    queryKey: ["classic", "today"],
-    queryFn: () => fetchToday(),
+    queryKey: ["hidden", "today"],
+    queryFn: async () => {
+      const res = await fetchToday();
+      const key = {
+        mode: "hidden",
+        difficulty: res.difficulty,
+        date: +today,
+      } as GameStateKey;
+      const d = await db.game_states.get(key);
+      if (!d) {
+        await db.game_states.put({
+          ...key,
+          attempts: [],
+          result: Result.None,
+        });
+      }
+      return res;
+    },
     staleTime: Infinity,
   });
 
-  const [attempts, setAttempts] = useJSONLocalStorage<(string | null)[]>(
-    "attempts",
-    [],
+  const game = useMemo(
+    () =>
+      query.isSuccess
+        ? ({
+            mode: "hidden",
+            difficulty: query.data.difficulty,
+            date: +today,
+          } as GameStateKey)
+        : null,
+    [query.isSuccess, query.data?.difficulty, today],
   );
 
-  const [result, setResult] = useJSONLocalStorage<Result>(
-    "result",
-    Result.None,
+  const state = useLiveQuery(
+    async () => (game ? await db.game_states.get(game) : null),
+    [game],
   );
 
-  const [guess, setGuess] = useState("");
+  const isFullyLoaded = query.isSuccess && game != null && state != null;
 
   const [diff, setDiff] = useState<Duration>(
-    DateTime.utc()
-      .startOf("day")
-      .plus({ days: 1 })
-      .diffNow(["hours", "minutes", "seconds"]),
+    today.plus({ days: 1 }).diffNow(["hours", "minutes", "seconds"]),
   );
 
   useEffect(() => {
-    if (result !== Result.None) {
-      const nextDay = DateTime.utc().startOf("day").plus({ days: 1 });
+    if (state?.result != null && state.result !== Result.None) {
+      const nextDay = today.plus({ days: 1 });
       const interval = setInterval(() => {
         const diff = nextDay.diffNow(["hours", "minutes", "seconds"]);
         setDiff(diff);
@@ -63,34 +89,19 @@ function App() {
       }, 1_000);
       return () => clearInterval(interval);
     }
-  }, [result]);
-
-  const [lastPlayed, setLastPlayed] = useParsedLocalStorage(
-    "lastPlayed",
-    DateTime.utc().startOf("day"),
-    (s) => DateTime.fromMillis(Number(s), { zone: "utc" }),
-    (v) => v.toMillis().toString(),
-  );
+  }, [state?.result, today]);
 
   useEffect(() => {
-    if (+lastPlayed.startOf("day") !== +DateTime.utc().startOf("day")) {
-      setAttempts([]);
-      setResult(Result.None);
-      setLastPlayed(DateTime.utc().startOf("day"));
-    }
-    // Want this to run only on mount for the time change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!query.isPending && !query.isError) {
-      if (result === Result.Lose) {
+    if (isFullyLoaded) {
+      if (state.result === Result.Lose) {
         loseConfetti();
-      } else if (result === Result.Win) {
+      } else if (state.result === Result.Win) {
         winConfetti();
       }
     }
-  }, [query.isError, query.isPending, result]);
+  }, [isFullyLoaded, state?.result]);
+
+  const [guess, setGuess] = useState("");
 
   return (
     <div className="container mx-auto my-4 flex flex-col items-center justify-center gap-4 text-2xl lg:text-3xl xl:text-4xl">
@@ -98,8 +109,13 @@ function App() {
         <Button
           className="absolute left-0 top-0 text-base"
           onClick={() => {
-            setAttempts([]);
-            setResult(Result.None);
+            if (!isFullyLoaded) {
+              return;
+            }
+            void db.game_states.where(game).modify((t) => {
+              t.attempts = [];
+              t.result = Result.None;
+            });
           }}
         >
           RESET
@@ -107,9 +123,9 @@ function App() {
       )}
       <h1>Kanjidle・漢字パズル</h1>
       <p className="text-sm">
-        {DateTime.utc().toFormat("yyyy-LL-dd")}&#x3000;
-        {query.isSuccess ? (
-          diffName(query.data.difficulty)
+        {today.toFormat("yyyy-LL-dd")}&#x3000;
+        {isFullyLoaded ? (
+          difficultyName(query.data.difficulty)
         ) : (
           <span className="blur-sm">何々級・Load</span>
         )}
@@ -117,19 +133,19 @@ function App() {
       <div
         className={clsx(
           "grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out",
-          query.isSuccess && result !== Result.None && "grid-rows-[1fr]",
+          isFullyLoaded && state.result !== Result.None && "grid-rows-[1fr]",
         )}
       >
-        {query.isSuccess && result !== Result.None && (
+        {isFullyLoaded && state.result !== Result.None && (
           <div className="flex flex-col items-center justify-center gap-4 overflow-y-hidden">
             <Button
               className="h-[3ch] w-[14ch] rounded-lg border border-zinc-600 bg-inherit text-center text-xl enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600 lg:text-2xl xl:text-3xl"
               onClick={() => {
                 void window.navigator.clipboard.writeText(
-                  `Kanjidle (Beta) ${DateTime.utc().toFormat("yyyy-LL-dd")} ${
-                    result === Result.Lose ? "X" : attempts.length
+                  `Kanjidle (Beta) ${today.toFormat("yyyy-LL-dd")} ${
+                    state.result === Result.Lose ? "X" : state.attempts.length
                   }/5\n` +
-                    score(attempts.length, result) +
+                    score(state.attempts.length, state.result) +
                     `\nhttps://kanjidle.onecomp.one`,
                 );
                 toast(
@@ -155,8 +171,12 @@ function App() {
           </div>
         )}
       </div>
-      {query.isSuccess ? (
-        <Coin puzzle={query.data} showExtra={attempts.length} result={result} />
+      {isFullyLoaded ? (
+        <Coin
+          puzzle={query.data}
+          showExtra={state.attempts.length}
+          result={state.result}
+        />
       ) : (
         <CoinPlaceholder />
       )}
@@ -164,7 +184,7 @@ function App() {
         className="flex flex-row items-center justify-center gap-4"
         onSubmit={(e) => {
           e.preventDefault();
-          if (!query.isSuccess) {
+          if (!isFullyLoaded) {
             return;
           }
           if (!/^\p{Script=Han}$/u.test(guess)) {
@@ -176,7 +196,7 @@ function App() {
                 id: "invalid-input",
               },
             );
-          } else if (attempts.includes(guess)) {
+          } else if (state.attempts.includes(guess)) {
             toast(
               <CustomToast type="warn">
                 この漢字はすでに回答しました
@@ -186,15 +206,21 @@ function App() {
               },
             );
           } else if (guess === query.data.answer) {
-            setAttempts([...attempts, guess]);
-            setGuess("　");
-            setResult(Result.Win);
-          } else if (guess !== query.data?.answer) {
-            setAttempts([...attempts, guess]);
+            void db.game_states.where(game).modify((t) => {
+              t.attempts.push(guess);
+              t.result = Result.Win;
+            });
             setGuess("");
-            if (attempts.length === 4) {
-              setGuess("　");
-              setResult(Result.Lose);
+          } else if (guess !== query.data?.answer) {
+            void db.game_states.where(game).modify((t) => {
+              t.attempts.push(guess);
+            });
+            setGuess("");
+            if (state.attempts.length === 4) {
+              setGuess("");
+              void db.game_states.where(game).modify((t) => {
+                t.result = Result.Lose;
+              });
             }
           }
         }}
@@ -205,7 +231,7 @@ function App() {
             type="text"
             autoComplete="off"
             className="z-10 h-[3ch] w-[10ch] rounded-md rounded-r-none border border-r-0 border-zinc-600 bg-inherit text-center outline outline-2 outline-transparent transition-colors duration-300 ease-in-out focus:outline-blue-400 disabled:border-stone-600 disabled:placeholder:opacity-0 lg:w-[14ch]"
-            disabled={result !== Result.None}
+            disabled={state != null && state.result !== Result.None}
             value={guess}
             placeholder="✏１文字"
             onChange={(e) => setGuess(e.target.value)}
@@ -213,7 +239,7 @@ function App() {
           <Button
             className="h-[3ch] w-[5ch] rounded-md rounded-l-none border border-emerald-600 bg-inherit text-center text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 disabled:border-stone-600 disabled:text-stone-600"
             type="submit"
-            disabled={result !== Result.None}
+            disabled={state != null && state.result !== Result.None}
           >
             決定
           </Button>
@@ -221,16 +247,20 @@ function App() {
         <Button
           className="h-[3ch] w-[8ch] rounded-md border border-rose-600 bg-inherit text-center text-rose-600 transition-colors duration-300 ease-in-out enabled:hover:bg-rose-600 enabled:hover:text-zinc-200 enabled:active:bg-rose-600 disabled:border-stone-600 disabled:text-stone-600"
           type="button"
-          disabled={result !== Result.None}
+          disabled={isFullyLoaded && state.result !== Result.None}
           onClick={() => {
-            if (!query.isSuccess) {
+            if (!isFullyLoaded) {
               return;
             }
-            setAttempts([...attempts, null]);
+            void db.game_states.where(game).modify((t) => {
+              t.attempts.push(null);
+            });
             setGuess("");
-            if (attempts.length === 4) {
-              setGuess("　");
-              setResult(Result.Lose);
+            if (state.attempts.length === 4) {
+              setGuess("");
+              void db.game_states.where(game).modify((t) => {
+                t.result = Result.Lose;
+              });
             }
           }}
         >
@@ -238,9 +268,9 @@ function App() {
         </Button>
       </form>
       <div className="flex h-[2ch] flex-row items-center justify-start gap-6">
-        {query.isSuccess ? (
-          attempts.length ? (
-            attempts.map((x, i) => (
+        {isFullyLoaded ? (
+          state.attempts.length ? (
+            state.attempts.map((x, i) => (
               <div
                 key={String(x) + i}
                 className={clsx(
@@ -268,14 +298,14 @@ function App() {
               回答とスキップはここに記録します
             </div>
           )
-        ) : query.isLoading ? (
+        ) : query.isLoading || state == null ? (
           <div className="text-sm text-stone-600">読込中…</div>
         ) : query.isError ? (
           <div className="font-mono text-sm text-rose-600">
             {query.error.message}
           </div>
         ) : (
-          <div className="text-sm text-rose-600">エラー</div>
+          <div className="text-sm text-rose-600">予想外エラー</div>
         )}
       </div>
       <Disclosure
@@ -366,6 +396,21 @@ const example = {
     },
   ],
 };
+
+function difficultyName(d: Difficulty): string {
+  switch (d) {
+    case Difficulty.Simple:
+      return "絵本級・Simple";
+    case Difficulty.Easy:
+      return "童話級・Easy";
+    case Difficulty.Normal:
+      return "漫画級・Normal";
+    case Difficulty.Hard:
+      return "芝居級・Hard";
+    case Difficulty.Lunatic:
+      return "奇譚級・Lunatic";
+  }
+}
 
 function score(attempts: number, result: Result): string {
   if (result === Result.Lose) {
