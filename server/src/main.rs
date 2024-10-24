@@ -13,7 +13,7 @@ use axum::{
     BoxError, Router,
 };
 use chrono::{Datelike, DurationRound, TimeDelta, Utc, Weekday};
-use data::{Ji, KanjiClass, KanjiData, Loc, WordData};
+use data::{Ji, KanjiClass, KanjiData, KanjiMeta, Loc, WordData};
 use generate::{Generator, Hint, Puzzle, PuzzleOptions};
 use rand::SeedableRng;
 use serde::{Deserialize, Serialize};
@@ -219,38 +219,21 @@ impl ReqPuzzleOptions {
 #[derive(Debug, Serialize)]
 struct ResPuzzle {
     hints: Vec<ResHint>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     extra_hints: Vec<ResHint>,
     answer: Ji,
-}
-
-impl ResPuzzle {
-    fn new_from_puzzle(puzzle: &Puzzle) -> ResPuzzle {
-        ResPuzzle {
-            answer: puzzle.answer,
-            hints: puzzle.hints.iter().map(ResHint::new_from_hint).collect(),
-            extra_hints: puzzle
-                .extra_hints
-                .iter()
-                .map(ResHint::new_from_hint)
-                .collect(),
-        }
-    }
-}
-
-#[derive(Debug, Serialize)]
-struct ResTodayPuzzle {
-    hints: Vec<ResHint>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    extra_hints: Vec<ResHint>,
-    answer: Ji,
+    answer_meta: KanjiMeta,
     difficulty: Difficulty,
 }
 
-impl ResTodayPuzzle {
-    fn new_from_puzzle(puzzle: &Puzzle, difficulty: Difficulty) -> ResTodayPuzzle {
-        ResTodayPuzzle {
+impl ResPuzzle {
+    fn new_from_puzzle(
+        puzzle: &Puzzle,
+        kanji_data: &KanjiData,
+        difficulty: Difficulty,
+    ) -> ResPuzzle {
+        ResPuzzle {
             answer: puzzle.answer,
+            answer_meta: kanji_data.kanji_metas.get(&puzzle.answer).unwrap().clone(),
             hints: puzzle.hints.iter().map(ResHint::new_from_hint).collect(),
             extra_hints: puzzle
                 .extra_hints
@@ -289,7 +272,7 @@ impl std::fmt::Display for ResHint {
 async fn get_today(
     State(state): State<Arc<ApiState>>,
     extract::Query(payload): extract::Query<ReqTodayPuzzleOptions>,
-) -> Result<Json<ResTodayPuzzle>, StatusCode> {
+) -> Result<Json<ResPuzzle>, StatusCode> {
     let today = Utc::now().duration_trunc(TimeDelta::days(1)).unwrap();
     let difficulty = match today.weekday() {
         Weekday::Mon => Difficulty::Easy,
@@ -304,7 +287,7 @@ async fn get_today(
         today.timestamp() as u64 + (100 * (payload.mode as u64) + (difficulty as u64)),
     );
 
-    let puzzle = ResTodayPuzzle::new_from_puzzle(
+    let puzzle = ResPuzzle::new_from_puzzle(
         &g.choose_puzzle(
             &ReqPuzzleOptions {
                 mode: payload.mode,
@@ -312,6 +295,7 @@ async fn get_today(
             }
             .to_puzzle_options(),
         ),
+        &state.kanji_data,
         difficulty,
     );
     Ok(Json(puzzle))
@@ -323,6 +307,10 @@ async fn get_random(
 ) -> Result<Json<ResPuzzle>, StatusCode> {
     let mut g = state.to_generator_random();
 
-    let puzzle = ResPuzzle::new_from_puzzle(&g.choose_puzzle(&payload.to_puzzle_options()));
+    let puzzle = ResPuzzle::new_from_puzzle(
+        &g.choose_puzzle(&payload.to_puzzle_options()),
+        &state.kanji_data,
+        payload.difficulty,
+    );
     Ok(Json(puzzle))
 }

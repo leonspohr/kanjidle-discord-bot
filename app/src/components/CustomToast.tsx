@@ -21,7 +21,7 @@ export default function CustomToast({ children, type }: CustomToastProps) {
         type === "success" && "border-emerald-600 text-emerald-600",
         type === "error" && "border-rose-600 text-rose-600",
         type === "warn" && "border-amber-600 text-amber-600",
-        type === "info" && "border-zinc-600 text-zinc-600",
+        type === "info" && "border-zinc-600 text-zinc-900 dark:text-zinc-200",
       )}
     >
       {

@@ -1,10 +1,10 @@
 import clsx from "clsx";
 
 import { Result } from "../db/Result";
-import { Loc, ResPuzzleHidden } from "../query/api";
+import { Loc, ResPuzzle } from "../query/api";
 
 export interface CoinProps {
-  puzzle: ResPuzzleHidden;
+  puzzle: ResPuzzle;
   showExtra: number;
   result: Result;
 }
@@ -12,7 +12,7 @@ export interface CoinProps {
 export default function Coin({ puzzle, showExtra, result }: CoinProps) {
   return (
     <div className="grid select-none grid-cols-coin grid-rows-coin place-items-center grid-areas-coin">
-      {puzzle.hints.concat(puzzle.extra_hints).map((w, i) => (
+      {puzzle.hints.concat(puzzle?.extra_hints ?? []).map((w, i) => (
         <div
           key={w.hint + w.answer}
           className={clsx(
@@ -38,7 +38,7 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
               : "↓←↑→↘↙↖↗"[i]}
         </div>
       ))}
-      {puzzle.hints.concat(puzzle.extra_hints).map((w, i) => (
+      {puzzle.hints.concat(puzzle?.extra_hints ?? []).map((w, i) => (
         <a
           key={w.hint + w.answer}
           {...(result === Result.None

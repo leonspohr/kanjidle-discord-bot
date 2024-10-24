@@ -59,7 +59,7 @@ pub enum KanjiClass {
     All,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct KanjiMeta {
     pub level: String,
     pub class: KanjiClass,
@@ -69,7 +69,7 @@ pub struct KanjiMeta {
     pub kun: Vec<Kun>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Kun(
     pub String,
     #[serde(skip_serializing_if = "Option::is_none", default)] pub Option<String>,

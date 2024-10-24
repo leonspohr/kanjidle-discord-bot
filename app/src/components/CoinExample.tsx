@@ -3,14 +3,14 @@ import clsx from "clsx";
 import { Loc, ResHint } from "../query/api";
 
 export interface CoinExampleProps {
-  puzzle: { hints: ResHint[]; extra_hints: ResHint[] };
+  puzzle: { hints: ResHint[]; extra_hints?: ResHint[] };
   showExtra: number;
 }
 
 export default function CoinExample({ puzzle, showExtra }: CoinExampleProps) {
   return (
     <div className="grid select-none grid-cols-coin-example grid-rows-coin-example place-items-center grid-areas-coin">
-      {puzzle.hints.concat(puzzle.extra_hints).map((w, i) => (
+      {puzzle.hints.concat(puzzle?.extra_hints ?? []).map((w, i) => (
         <div
           key={w.hint + w.answer}
           className={clsx(
@@ -36,7 +36,7 @@ export default function CoinExample({ puzzle, showExtra }: CoinExampleProps) {
               : "↓←↑→↘↙↖↗"[i]}
         </div>
       ))}
-      {puzzle.hints.concat(puzzle.extra_hints).map((w, i) => (
+      {puzzle.hints.concat(puzzle?.extra_hints ?? []).map((w, i) => (
         <div
           key={w.hint + w.answer}
           className={clsx(

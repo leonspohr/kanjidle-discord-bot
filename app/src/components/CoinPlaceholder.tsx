@@ -1,9 +1,14 @@
 import clsx from "clsx";
 
-export default function CoinPlaceholder() {
+export interface CoinPlaceholderProps {
+  n: number;
+}
+
+export default function CoinPlaceholder({ n }: CoinPlaceholderProps) {
+  const arr = Array.from({ length: n }, (_, i) => i);
   return (
     <div className="grid select-none grid-cols-coin grid-rows-coin place-items-center grid-areas-coin">
-      {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+      {arr.map((i) => (
         <div
           key={i}
           className={clsx(
@@ -23,7 +28,7 @@ export default function CoinPlaceholder() {
           <span className="blur-sm">{"│─│─╲╱╲╱"[i]}</span>
         </div>
       ))}
-      {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+      {arr.map((i) => (
         <div
           key={i}
           className={clsx(

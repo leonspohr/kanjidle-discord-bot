@@ -12,9 +12,7 @@ const queryClient = new QueryClient();
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <div className="h-screen overflow-y-scroll bg-zinc-200 text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100">
-        <App />
-      </div>
+      <App />
     </QueryClientProvider>
   </StrictMode>,
 );

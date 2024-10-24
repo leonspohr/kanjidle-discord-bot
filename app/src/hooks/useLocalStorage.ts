@@ -1,9 +1,9 @@
 import { useCallback, useState } from "react";
 
-export default function useLocalStorage(
+export default function useLocalStorage<T extends string>(
   key: string,
-  initial: string,
-): [string, (newValue: string) => void, () => void] {
+  initial: T,
+): [T, (newValue: T) => void, () => void] {
   const first =
     localStorage.getItem(key) ??
     (() => {
@@ -12,13 +12,13 @@ export default function useLocalStorage(
     })();
   const [value, setValue_] = useState(first);
   const setValue = useCallback(
-    (newValue: string) => {
+    (newValue: T) => {
       localStorage.setItem(key, newValue);
       setValue_(newValue);
     },
     [key],
   );
-  return [value, setValue, () => localStorage.removeItem(key)];
+  return [value as T, setValue, () => localStorage.removeItem(key)];
 }
 
 export function useJSONLocalStorage<T>(
