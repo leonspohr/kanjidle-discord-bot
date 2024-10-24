@@ -260,24 +260,21 @@ function App() {
           スキップ
         </Button>
       </form>
-      <div className="flex h-[2ch] flex-row items-center justify-start gap-6">
+      <div className="flex h-[2ch] select-none flex-row items-center justify-start gap-6">
         {isFullyLoaded ? (
           state.attempts.length ? (
             state.attempts.map((x, i) => (
               <div
                 key={String(x) + i}
                 className={clsx(
-                  "flex flex-row items-center justify-center",
-                  x === query.data.answer ? "text-green-600" : "text-red-600",
+                  "flex h-[2.5ch] w-[2.5ch] flex-row items-center justify-center rounded-md border",
+                  x === query.data.answer
+                    ? "border-green-600 text-green-600"
+                    : "border-red-600 text-red-600",
                 )}
               >
-                {x === query.data.answer ? (
-                  <span className="scale-75">✔</span>
-                ) : (
-                  <span className="-translate-y-0.5">⨯</span>
-                )}
                 {x ?? (
-                  <div className="grid grid-cols-2 grid-rows-2 text-xs">
+                  <div className="grid grid-cols-2 grid-rows-2 text-xs font-semibold leading-tight lg:text-sm xl:text-base">
                     <div>ス</div>
                     <div>キ</div>
                     <div>ッ</div>
