@@ -780,7 +780,7 @@ function score(state: GameState): string {
         break;
     }
   }
-  lines.unshift(`Kanjidle (Beta) ${today}`);
+  lines.unshift(`Kanjidle ${today}`);
   lines.push("https://kanjidle.onecomp.one");
   lines[1] += " " + mode;
   if (state.result === Result.Lose) {
