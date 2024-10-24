@@ -17,7 +17,11 @@ import clsx from "clsx";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { BiSolidDownArrow, BiSolidRightArrow } from "react-icons/bi";
+import {
+  BiSolidDownArrow,
+  BiSolidLockAlt,
+  BiSolidRightArrow,
+} from "react-icons/bi";
 import { DateTime, Duration } from "ts-luxon";
 
 import { db, GameState, GameStateKey } from "../db/db";
@@ -157,11 +161,11 @@ export default function Puzzle() {
           RESET
         </Button>
       )}
-      <div className="flex flex-col items-center justify-center gap-2">
+      <div className="flex flex-row flex-wrap items-center justify-center gap-2 text-base lg:text-lg xl:text-xl">
         <RadioGroup
           value={mode}
           onChange={setMode}
-          className="flex w-full flex-col items-center justify-center gap-2"
+          className="flex flex-col items-center justify-center gap-2"
         >
           <div className="flex flex-col items-center justify-center gap-2">
             <div className="flex w-full flex-row items-center justify-center">
@@ -182,7 +186,7 @@ export default function Puzzle() {
             </div>
           </div>
         </RadioGroup>
-        <div className="flex flex-row items-center justify-center gap-4 text-base lg:text-lg xl:text-xl">
+        <div className="flex flex-row flex-wrap items-center justify-center gap-2">
           <Menu>
             <MenuButton className="flex h-[3ch] flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
               {({ active }) => (
@@ -192,7 +196,7 @@ export default function Puzzle() {
                   </span>
                   <span>
                     {seed === Seed.Today
-                      ? "今日・" + today.toFormat("yyyy-LL-dd")
+                      ? today.toFormat("yyyy年LL月dd日")
                       : "ランダム"}
                   </span>
                 </>
@@ -209,7 +213,7 @@ export default function Puzzle() {
                     setSeed(Seed.Today);
                   }}
                 >
-                  今日・{today.toFormat("yyyy-LL-dd")}
+                  {today.toFormat("yyyy年LL月dd日")}
                 </Button>
               </MenuItem>
               <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-200/25" />
@@ -228,54 +232,53 @@ export default function Puzzle() {
               </MenuItem>
             </MenuItems>
           </Menu>
-          <span>
-            {isFullyLoaded ? (
-              seed === Seed.Today ? (
-                difficultyName(query.data.difficulty)
-              ) : (
-                <Menu>
-                  <MenuButton className="flex h-[3ch] flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
-                    {({ active }) => (
-                      <>
-                        <span>
-                          {active ? (
-                            <BiSolidDownArrow />
-                          ) : (
-                            <BiSolidRightArrow />
-                          )}
-                        </span>
-                        <span>{difficultyName(query.data.difficulty)}</span>
-                      </>
-                    )}
-                  </MenuButton>
-                  <MenuItems
-                    anchor="bottom"
-                    className="my-1 flex flex-col items-center justify-center rounded-lg border border-zinc-600 bg-zinc-200 p-1 text-base text-zinc-900 lg:text-lg xl:text-xl dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-zinc-800"
-                  >
-                    {Object.values(Difficulty).map((d, i) => (
-                      <>
-                        <MenuItem key={d}>
-                          <Button
-                            className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600"
-                            onClick={() => {
-                              setDifficulty(d);
-                            }}
-                          >
-                            {difficultyName(d)}
-                          </Button>
-                        </MenuItem>
-                        {i !== Object.values(Difficulty).length - 1 && (
-                          <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-200/25" />
-                        )}
-                      </>
-                    ))}
-                  </MenuItems>
-                </Menu>
-              )
+          {isFullyLoaded ? (
+            seed === Seed.Today ? (
+              <div className="flex h-[3ch] select-none flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
+                <span>
+                  <BiSolidLockAlt />
+                </span>
+                <span>{difficultyName(query.data.difficulty)}</span>
+              </div>
             ) : (
-              <span className="blur-sm">何々級・Load</span>
-            )}
-          </span>
+              <Menu>
+                <MenuButton className="flex h-[3ch] flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
+                  {({ active }) => (
+                    <>
+                      <span>
+                        {active ? <BiSolidDownArrow /> : <BiSolidRightArrow />}
+                      </span>
+                      <span>{difficultyName(query.data.difficulty)}</span>
+                    </>
+                  )}
+                </MenuButton>
+                <MenuItems
+                  anchor="bottom"
+                  className="my-1 flex flex-col items-center justify-center rounded-lg border border-zinc-600 bg-zinc-200 p-1 text-base text-zinc-900 lg:text-lg xl:text-xl dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-zinc-800"
+                >
+                  {Object.values(Difficulty).map((d, i) => (
+                    <>
+                      <MenuItem key={d}>
+                        <Button
+                          className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600"
+                          onClick={() => {
+                            setDifficulty(d);
+                          }}
+                        >
+                          {difficultyName(d)}
+                        </Button>
+                      </MenuItem>
+                      {i !== Object.values(Difficulty).length - 1 && (
+                        <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-200/25" />
+                      )}
+                    </>
+                  ))}
+                </MenuItems>
+              </Menu>
+            )
+          ) : (
+            <span className="blur-sm">何々級・Load</span>
+          )}
         </div>
       </div>
       <div
