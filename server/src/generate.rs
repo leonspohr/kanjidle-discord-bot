@@ -111,6 +111,11 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
             .values()
             .skip_while(|x| x.word.rank < options.word_rarity_range.start)
             .take_while(|x| x.word.rank < options.word_rarity_range.end)
+            .filter(|two| {
+                let class_a = self.kanji_data.kanji_metas.get(&two.a).unwrap().class;
+                let class_b = self.kanji_data.kanji_metas.get(&two.b).unwrap().class;
+                class_a <= options.kanji_class && class_b <= options.kanji_class
+            })
             .filter_map(|two| {
                 let (hint, answer, answer_location) = if two.a == answer {
                     (two.b, two.a, Loc::L)
