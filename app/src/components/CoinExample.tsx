@@ -59,7 +59,9 @@ export default function CoinExample({ puzzle, showExtra }: CoinExampleProps) {
           <span> </span>
         </div>
       ))}
-      <div className="text-xl grid-in-qq">？&#x000A;</div>
+      <div className="text-xl grid-in-qq">
+        ？<span> </span>
+      </div>
     </div>
   );
 }
