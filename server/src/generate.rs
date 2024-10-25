@@ -9,7 +9,8 @@ use crate::data::{Ji, KanjiClass, KanjiData, Loc, WordData};
 #[derive(Debug)]
 pub struct PuzzleOptions {
     // Kanji picking options
-    pub kanji_class: KanjiClass,
+    pub kanji_class: KanjiClass,     // Applies to words as well
+    pub min_kanji_class: KanjiClass, // Only applies to the answer kanji
     pub rare_kanji_rank: usize,
     pub rare_kanji_bias: f64,
 
@@ -91,7 +92,8 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
             .kanjis
             .values()
             .filter(|k| {
-                self.kanji_data.kanji_metas.get(&k.ji).unwrap().class <= options.kanji_class
+                let class = self.kanji_data.kanji_metas.get(&k.ji).unwrap().class;
+                options.min_kanji_class <= class && class <= options.kanji_class
             })
             .collect_vec();
         weighted_shuffle(&ks, &mut self.rng, |k| {

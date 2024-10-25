@@ -150,6 +150,7 @@ impl ReqPuzzleOptions {
         match self.difficulty {
             Difficulty::Simple => PuzzleOptions {
                 kanji_class: KanjiClass::Kyoiku,
+                min_kanji_class: KanjiClass::Kyoiku,
                 rare_kanji_rank: 0,
                 rare_kanji_bias: 1.0,
                 word_rarity_range: 0..10_000,
@@ -163,6 +164,7 @@ impl ReqPuzzleOptions {
             },
             Difficulty::Easy => PuzzleOptions {
                 kanji_class: KanjiClass::Kyoiku,
+                min_kanji_class: KanjiClass::Kyoiku,
                 rare_kanji_rank: 0,
                 rare_kanji_bias: 1.0,
                 word_rarity_range: 0..20_000,
@@ -176,6 +178,7 @@ impl ReqPuzzleOptions {
             },
             Difficulty::Normal => PuzzleOptions {
                 kanji_class: KanjiClass::Joyo,
+                min_kanji_class: KanjiClass::Kyoiku,
                 rare_kanji_rank: 0,
                 rare_kanji_bias: 1.0,
                 word_rarity_range: 0..40_000,
@@ -189,6 +192,7 @@ impl ReqPuzzleOptions {
             },
             Difficulty::Hard => PuzzleOptions {
                 kanji_class: KanjiClass::Joyo,
+                min_kanji_class: KanjiClass::Kyoiku,
                 rare_kanji_rank: 2_000,
                 rare_kanji_bias: 2.0,
                 word_rarity_range: 10_000..70_000,
@@ -202,6 +206,7 @@ impl ReqPuzzleOptions {
             },
             Difficulty::Lunatic => PuzzleOptions {
                 kanji_class: KanjiClass::Kentei,
+                min_kanji_class: KanjiClass::Kyoiku,
                 rare_kanji_rank: 2_000,
                 rare_kanji_bias: 2.0,
                 word_rarity_range: 10_000..120_000,
@@ -215,6 +220,7 @@ impl ReqPuzzleOptions {
             },
             Difficulty::Lunatic2 => PuzzleOptions {
                 kanji_class: KanjiClass::All,
+                min_kanji_class: KanjiClass::Joyo,
                 rare_kanji_rank: 3_000,
                 rare_kanji_bias: 4.0,
                 word_rarity_range: 10_000..320_000,
