@@ -131,6 +131,7 @@ enum Difficulty {
     Normal,
     Hard,
     Lunatic,
+    Lunatic2,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -209,6 +210,19 @@ impl ReqPuzzleOptions {
                 rare_kanji_hint_bias: 1.5,
                 rare_word_hint_rank: 30_000,
                 rare_word_hint_bias: 1.5,
+                num_hints,
+                guarantee_answer_by,
+            },
+            Difficulty::Lunatic2 => PuzzleOptions {
+                kanji_class: KanjiClass::All,
+                rare_kanji_rank: 3_000,
+                rare_kanji_bias: 4.0,
+                word_rarity_range: 0..320_000,
+                irregular_hint_bias: 2.0,
+                rare_kanji_hint_rank: 3_000,
+                rare_kanji_hint_bias: 4.0,
+                rare_word_hint_rank: 60_000,
+                rare_word_hint_bias: 4.0,
                 num_hints,
                 guarantee_answer_by,
             },

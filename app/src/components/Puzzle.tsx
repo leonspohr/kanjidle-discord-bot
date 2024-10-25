@@ -686,6 +686,8 @@ function difficultyName(d: Difficulty): string {
       return "芝居級・Hard";
     case Difficulty.Lunatic:
       return "奇譚級・Lunatic";
+    case Difficulty.Lunatic2:
+      return "奇譚級・Lunatic+";
   }
 }
 
