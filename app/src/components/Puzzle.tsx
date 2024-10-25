@@ -486,65 +486,82 @@ export default function Puzzle() {
           <div className="text-sm text-rose-600">予想外エラー</div>
         )}
       </div>
-      {isFullyLoaded && mode === Mode.Classic && (
+      {mode === Mode.Classic && (
         <div className="flex flex-col items-center justify-center gap-2">
           <Button
-            disabled={state.hints >= 1 || state.result !== Result.None}
+            disabled={
+              !isFullyLoaded || state.hints >= 1 || state.result !== Result.None
+            }
             className={clsx(
               "h-[3ch] w-[30ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 lg:text-2xl xl:text-3xl",
-              state.hints >= 1
+              isFullyLoaded && state.hints >= 1
                 ? "disabled:border-amber-600 disabled:text-amber-600"
                 : "disabled:border-stone-600 disabled:text-stone-600",
             )}
             onClick={() => {
+              if (!isFullyLoaded) {
+                return;
+              }
               void db.game_states.where(game).modify((t) => {
                 t.hints++;
               });
             }}
           >
-            {state.hints >= 1 ? query.data.answer_meta.level : "漢検レベル"}
+            {isFullyLoaded && state.hints >= 1
+              ? query.data.answer_meta.level
+              : "漢検レベル"}
           </Button>
           <Button
             disabled={
+              !isFullyLoaded ||
               state.hints < 1 ||
               state.hints >= 2 ||
               state.result !== Result.None
             }
             className={clsx(
               "h-[3ch] w-[30ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 lg:text-2xl xl:text-3xl",
-              state.hints >= 2
+              isFullyLoaded && state.hints >= 2
                 ? "disabled:border-amber-600 disabled:text-amber-600"
                 : "disabled:border-stone-600 disabled:text-stone-600",
             )}
             onClick={() => {
+              if (!isFullyLoaded) {
+                return;
+              }
               void db.game_states.where(game).modify((t) => {
                 t.hints++;
               });
             }}
           >
-            {state.hints >= 2
+            {isFullyLoaded && state.hints >= 2
               ? query.data.answer_meta.stroke_count + "画"
               : "画数"}
           </Button>
           <Button
             disabled={
+              !isFullyLoaded ||
               state.hints < 2 ||
               state.hints >= 3 ||
               state.result !== Result.None
             }
             className={clsx(
               "h-[3ch] w-[30ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 lg:text-2xl xl:text-3xl",
-              state.hints >= 3
+              isFullyLoaded && state.hints >= 3
                 ? "disabled:border-amber-600 disabled:text-amber-600"
                 : "disabled:border-stone-600 disabled:text-stone-600",
             )}
             onClick={() => {
+              if (!isFullyLoaded) {
+                return;
+              }
               void db.game_states.where(game).modify((t) => {
                 t.hints++;
               });
             }}
           >
-            {state.hints >= 3 ? query.data.answer_meta.radical : "部首"}
+            {isFullyLoaded && state.hints >= 3
+              ? query.data.answer_meta.radical
+              : "部首"}
           </Button>
         </div>
       )}
