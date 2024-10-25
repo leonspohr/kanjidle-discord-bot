@@ -470,20 +470,24 @@ export default function Puzzle() {
               </div>
             ))
           ) : (
-            <div className="text-sm text-stone-600">
+            <div className="text-base text-stone-600 lg:text-lg xl:text-xl">
               {mode === Mode.Hidden
                 ? "回答とスキップはここに記録します"
                 : "回答はここに記録します"}
             </div>
           )
         ) : query.isLoading || state == null ? (
-          <div className="text-sm text-stone-600">読込中…</div>
+          <div className="text-base text-stone-600 lg:text-lg xl:text-xl">
+            読込中…
+          </div>
         ) : query.isError ? (
-          <div className="font-mono text-sm text-rose-600">
+          <div className="font-mono text-base text-rose-600">
             {query.error.message}
           </div>
         ) : (
-          <div className="text-sm text-rose-600">予想外エラー</div>
+          <div className="text-base text-rose-600 lg:text-lg xl:text-xl">
+            予想外エラー
+          </div>
         )}
       </div>
       {mode === Mode.Classic && (
