@@ -6,7 +6,7 @@ services:
   server:
     build: ./server
     environment:
-      RUST_LOG: INFO
+      RUST_LOG: DEBUG
       KDLE_PORT: 3000
       KDLE_RATE_NUM: 3
       KDLE_RATE_PER: 6
