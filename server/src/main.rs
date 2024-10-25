@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Instant;
@@ -17,6 +18,7 @@ use data::{Ji, KanjiClass, KanjiData, KanjiMeta, Loc, WordData};
 use generate::{Generator, Hint, Puzzle, PuzzleOptions};
 use rand::SeedableRng;
 use serde::{Deserialize, Serialize};
+use tokio::sync::RwLock;
 use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
@@ -27,6 +29,7 @@ pub mod generate;
 struct ApiState {
     pub kanji_data: KanjiData,
     pub word_data: WordData,
+    pub cache: RwLock<BTreeMap<u64, ResPuzzle>>,
 }
 
 impl ApiState {
@@ -84,6 +87,7 @@ async fn main() -> Result<()> {
         .with_state(Arc::new(ApiState {
             word_data,
             kanji_data,
+            cache: RwLock::new(BTreeMap::new()),
         }))
         .layer(
             CorsLayer::new()
@@ -236,7 +240,7 @@ impl ReqPuzzleOptions {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 struct ResPuzzle {
     hints: Vec<ResHint>,
     extra_hints: Vec<ResHint>,
@@ -265,7 +269,7 @@ impl ResPuzzle {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct ResHint {
     pub answer: Loc,
     pub hint: Ji,
@@ -289,6 +293,8 @@ impl std::fmt::Display for ResHint {
     }
 }
 
+const MAX_CACHE_LEN: usize = 2;
+
 async fn get_today(
     State(state): State<Arc<ApiState>>,
     extract::Query(payload): extract::Query<ReqTodayPuzzleOptions>,
@@ -303,9 +309,13 @@ async fn get_today(
         Weekday::Sat => Difficulty::Lunatic,
         Weekday::Sun => Difficulty::Normal,
     };
-    let mut g = state.to_generator_seeded(
-        today.timestamp() as u64 + (100 * (payload.mode as u64) + (difficulty as u64)),
-    );
+    let seed = today.timestamp() as u64 + (100 * (payload.mode as u64) + (difficulty as u64));
+    if let Some(puzzle) = state.cache.read().await.get(&seed) {
+        tracing::debug!("Using cache for puzzle {}", seed);
+        return Ok(Json(puzzle.clone()));
+    }
+
+    let mut g = state.to_generator_seeded(seed);
 
     let puzzle = ResPuzzle::new_from_puzzle(
         &g.choose_puzzle(
@@ -318,6 +328,12 @@ async fn get_today(
         &state.kanji_data,
         difficulty,
     );
+    let mut cache = state.cache.write().await;
+    if cache.len() >= MAX_CACHE_LEN {
+        let (k, _) = cache.pop_first().unwrap();
+        tracing::debug!("Removed from cache puzzle {}", k);
+    }
+    cache.insert(seed, puzzle.clone());
     Ok(Json(puzzle))
 }
 
