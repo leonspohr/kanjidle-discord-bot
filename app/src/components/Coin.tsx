@@ -89,7 +89,8 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
           result === Result.Lose && "text-red-600 underline",
         )}
       >
-        {result === Result.None ? "？" : puzzle.answer}&#x000A;
+        {result === Result.None ? "？" : puzzle.answer}
+        <span> </span>
       </a>
     </div>
   );

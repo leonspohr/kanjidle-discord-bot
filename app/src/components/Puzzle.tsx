@@ -232,8 +232,8 @@ export default function Puzzle() {
               </MenuItem>
             </MenuItems>
           </Menu>
-          {isFullyLoaded ? (
-            seed === Seed.Today ? (
+          {seed === Seed.Today ? (
+            isFullyLoaded ? (
               <div className="flex h-[3ch] select-none flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-2 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
                 <span>
                   <BiSolidLockAlt />
@@ -241,43 +241,43 @@ export default function Puzzle() {
                 <span>{difficultyName(query.data.difficulty)}</span>
               </div>
             ) : (
-              <Menu>
-                <MenuButton className="flex h-[3ch] flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-2 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
-                  {({ active }) => (
-                    <>
-                      <span>
-                        {active ? <BiSolidDownArrow /> : <BiSolidRightArrow />}
-                      </span>
-                      <span>{difficultyName(query.data.difficulty)}</span>
-                    </>
-                  )}
-                </MenuButton>
-                <MenuItems
-                  anchor="bottom"
-                  className="my-1 flex flex-col items-center justify-center rounded-lg border border-zinc-600 bg-zinc-200 p-1 text-base text-zinc-900 lg:text-lg xl:text-xl dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-zinc-800"
-                >
-                  {Object.values(Difficulty).map((d, i) => (
-                    <>
-                      <MenuItem key={d}>
-                        <Button
-                          className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600"
-                          onClick={() => {
-                            setDifficulty(d);
-                          }}
-                        >
-                          {difficultyName(d)}
-                        </Button>
-                      </MenuItem>
-                      {i !== Object.values(Difficulty).length - 1 && (
-                        <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-200/25" />
-                      )}
-                    </>
-                  ))}
-                </MenuItems>
-              </Menu>
+              <span className="blur-sm">何々級・Load</span>
             )
           ) : (
-            <span className="blur-sm">何々級・Load</span>
+            <Menu>
+              <MenuButton className="flex h-[3ch] flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-2 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
+                {({ active }) => (
+                  <>
+                    <span>
+                      {active ? <BiSolidDownArrow /> : <BiSolidRightArrow />}
+                    </span>
+                    <span>{difficultyName(difficulty)}</span>
+                  </>
+                )}
+              </MenuButton>
+              <MenuItems
+                anchor="bottom"
+                className="my-1 flex flex-col items-center justify-center rounded-lg border border-zinc-600 bg-zinc-200 p-1 text-base text-zinc-900 lg:text-lg xl:text-xl dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-zinc-800"
+              >
+                {Object.values(Difficulty).map((d, i) => (
+                  <>
+                    <MenuItem key={d}>
+                      <Button
+                        className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600"
+                        onClick={() => {
+                          setDifficulty(d);
+                        }}
+                      >
+                        {difficultyName(d)}
+                      </Button>
+                    </MenuItem>
+                    {i !== Object.values(Difficulty).length - 1 && (
+                      <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-200/25" />
+                    )}
+                  </>
+                ))}
+              </MenuItems>
+            </Menu>
           )}
         </div>
       </div>
@@ -470,81 +470,106 @@ export default function Puzzle() {
               </div>
             ))
           ) : (
-            <div className="text-sm text-stone-600">
+            <div className="text-base text-stone-600 lg:text-lg xl:text-xl">
               {mode === Mode.Hidden
                 ? "回答とスキップはここに記録します"
                 : "回答はここに記録します"}
             </div>
           )
         ) : query.isLoading || state == null ? (
-          <div className="text-sm text-stone-600">読込中…</div>
+          <div className="text-base text-stone-600 lg:text-lg xl:text-xl">
+            読込中…
+          </div>
         ) : query.isError ? (
-          <div className="font-mono text-sm text-rose-600">
+          <div className="font-mono text-base text-rose-600">
             {query.error.message}
           </div>
         ) : (
-          <div className="text-sm text-rose-600">予想外エラー</div>
+          <div className="text-base text-rose-600 lg:text-lg xl:text-xl">
+            予想外エラー
+          </div>
         )}
       </div>
-      {isFullyLoaded && mode === Mode.Classic && (
+      {mode === Mode.Classic && (
         <div className="flex flex-col items-center justify-center gap-2">
           <Button
-            disabled={state.hints >= 1 || state.result !== Result.None}
+            disabled={
+              !isFullyLoaded || state.hints >= 1 || state.result !== Result.None
+            }
             className={clsx(
               "h-[3ch] w-[30ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 lg:text-2xl xl:text-3xl",
-              state.hints >= 1
+              isFullyLoaded && state.hints >= 1
                 ? "disabled:border-amber-600 disabled:text-amber-600"
                 : "disabled:border-stone-600 disabled:text-stone-600",
             )}
             onClick={() => {
+              if (!isFullyLoaded) {
+                return;
+              }
               void db.game_states.where(game).modify((t) => {
                 t.hints++;
               });
             }}
           >
-            {state.hints >= 1 ? query.data.answer_meta.level : "漢検レベル"}
+            {isFullyLoaded && state.hints >= 1
+              ? query.data.answer_meta.level
+              : "漢検レベル"}
           </Button>
           <Button
             disabled={
+              !isFullyLoaded ||
               state.hints < 1 ||
               state.hints >= 2 ||
               state.result !== Result.None
             }
             className={clsx(
               "h-[3ch] w-[30ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 lg:text-2xl xl:text-3xl",
-              state.hints >= 2
+              isFullyLoaded && state.hints >= 2
                 ? "disabled:border-amber-600 disabled:text-amber-600"
                 : "disabled:border-stone-600 disabled:text-stone-600",
             )}
             onClick={() => {
+              if (!isFullyLoaded) {
+                return;
+              }
               void db.game_states.where(game).modify((t) => {
                 t.hints++;
               });
             }}
           >
-            {state.hints >= 2
+            {isFullyLoaded && state.hints >= 2
               ? query.data.answer_meta.stroke_count + "画"
               : "画数"}
           </Button>
           <Button
             disabled={
+              !isFullyLoaded ||
               state.hints < 2 ||
               state.hints >= 3 ||
               state.result !== Result.None
             }
             className={clsx(
               "h-[3ch] w-[30ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 lg:text-2xl xl:text-3xl",
-              state.hints >= 3
+              isFullyLoaded && state.hints >= 3
                 ? "disabled:border-amber-600 disabled:text-amber-600"
                 : "disabled:border-stone-600 disabled:text-stone-600",
             )}
             onClick={() => {
+              if (!isFullyLoaded) {
+                return;
+              }
               void db.game_states.where(game).modify((t) => {
                 t.hints++;
               });
             }}
           >
-            {state.hints >= 3 ? query.data.answer_meta.radical : "部首"}
+            {isFullyLoaded && state.hints >= 3
+              ? query.data.answer_meta.radical
+                  .split("・")
+                  .some((r) => query.data.answer === r)
+                ? "部首は漢字と同じ"
+                : query.data.answer_meta.radical
+              : "部首"}
           </Button>
         </div>
       )}
@@ -686,6 +711,8 @@ function difficultyName(d: Difficulty): string {
       return "芝居級・Hard";
     case Difficulty.Lunatic:
       return "奇譚級・Lunatic";
+    case Difficulty.Lunatic2:
+      return "奇譚級・Lunatic+";
   }
 }
 

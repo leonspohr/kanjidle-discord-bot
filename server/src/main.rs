@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Instant;
@@ -13,10 +14,11 @@ use axum::{
     BoxError, Router,
 };
 use chrono::{Datelike, DurationRound, TimeDelta, Utc, Weekday};
-use data::{Ji, KanjiClass, KanjiData, KanjiMeta, Loc, WordData};
+use data::{Ji, KanjiClass, KanjiData, KanjiMeta, Loc, WordData, ESTIMATED_RANK_MAX};
 use generate::{Generator, Hint, Puzzle, PuzzleOptions};
 use rand::SeedableRng;
 use serde::{Deserialize, Serialize};
+use tokio::sync::RwLock;
 use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
@@ -27,6 +29,7 @@ pub mod generate;
 struct ApiState {
     pub kanji_data: KanjiData,
     pub word_data: WordData,
+    pub cache: RwLock<BTreeMap<u64, ResPuzzle>>,
 }
 
 impl ApiState {
@@ -84,6 +87,7 @@ async fn main() -> Result<()> {
         .with_state(Arc::new(ApiState {
             word_data,
             kanji_data,
+            cache: RwLock::new(BTreeMap::new()),
         }))
         .layer(
             CorsLayer::new()
@@ -131,6 +135,7 @@ enum Difficulty {
     Normal,
     Hard,
     Lunatic,
+    Lunatic2,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -148,10 +153,14 @@ impl ReqPuzzleOptions {
         };
         match self.difficulty {
             Difficulty::Simple => PuzzleOptions {
-                kanji_class: KanjiClass::Kyoiku,
+                min_kanji_class: KanjiClass::Kyoiku,
+                max_kanji_class: KanjiClass::Kyoiku,
                 rare_kanji_rank: 0,
                 rare_kanji_bias: 1.0,
-                word_rarity_range: 0..5_000,
+                min_word_kanji_class: KanjiClass::Kyoiku,
+                max_word_kanji_class: KanjiClass::Kyoiku,
+                min_word_rarity: 0,
+                max_word_rarity: 6_000,
                 irregular_hint_bias: 0.5,
                 rare_kanji_hint_rank: 0,
                 rare_kanji_hint_bias: 1.0,
@@ -161,10 +170,14 @@ impl ReqPuzzleOptions {
                 guarantee_answer_by,
             },
             Difficulty::Easy => PuzzleOptions {
-                kanji_class: KanjiClass::Kyoiku,
+                min_kanji_class: KanjiClass::Kyoiku,
+                max_kanji_class: KanjiClass::Kyoiku,
                 rare_kanji_rank: 0,
                 rare_kanji_bias: 1.0,
-                word_rarity_range: 0..10_000,
+                min_word_kanji_class: KanjiClass::Kyoiku,
+                max_word_kanji_class: KanjiClass::Kyoiku,
+                min_word_rarity: 0,
+                max_word_rarity: 12_000,
                 irregular_hint_bias: 1.0,
                 rare_kanji_hint_rank: 0,
                 rare_kanji_hint_bias: 1.0,
@@ -174,10 +187,14 @@ impl ReqPuzzleOptions {
                 guarantee_answer_by,
             },
             Difficulty::Normal => PuzzleOptions {
-                kanji_class: KanjiClass::Joyo,
+                min_kanji_class: KanjiClass::Kyoiku,
+                max_kanji_class: KanjiClass::Joyo,
                 rare_kanji_rank: 0,
                 rare_kanji_bias: 1.0,
-                word_rarity_range: 0..30_000,
+                min_word_kanji_class: KanjiClass::Kyoiku,
+                max_word_kanji_class: KanjiClass::Joyo,
+                min_word_rarity: 0,
+                max_word_rarity: 24_000,
                 irregular_hint_bias: 1.0,
                 rare_kanji_hint_rank: 0,
                 rare_kanji_hint_bias: 1.0,
@@ -187,28 +204,53 @@ impl ReqPuzzleOptions {
                 guarantee_answer_by,
             },
             Difficulty::Hard => PuzzleOptions {
-                kanji_class: KanjiClass::Joyo,
+                min_kanji_class: KanjiClass::Kyoiku,
+                max_kanji_class: KanjiClass::Joyo,
                 rare_kanji_rank: 2_000,
-                rare_kanji_bias: 1.25,
-                word_rarity_range: 0..60_000,
-                irregular_hint_bias: 1.5,
+                rare_kanji_bias: 2.0,
+                min_word_kanji_class: KanjiClass::Kyoiku,
+                max_word_kanji_class: KanjiClass::Joyo,
+                min_word_rarity: 6_000,
+                max_word_rarity: 48_000,
+                irregular_hint_bias: 2.0,
                 rare_kanji_hint_rank: 2_000,
-                rare_kanji_hint_bias: 1.25,
-                rare_word_hint_rank: 30_000,
-                rare_word_hint_bias: 1.25,
+                rare_kanji_hint_bias: 2.0,
+                rare_word_hint_rank: 24_000,
+                rare_word_hint_bias: 2.0,
                 num_hints,
                 guarantee_answer_by,
             },
             Difficulty::Lunatic => PuzzleOptions {
-                kanji_class: KanjiClass::Kentei,
+                min_kanji_class: KanjiClass::Joyo,
+                max_kanji_class: KanjiClass::Kentei,
                 rare_kanji_rank: 2_000,
-                rare_kanji_bias: 1.5,
-                word_rarity_range: 0..90_000,
+                rare_kanji_bias: 2.0,
+                min_word_kanji_class: KanjiClass::Kyoiku,
+                max_word_kanji_class: KanjiClass::Kentei,
+                min_word_rarity: 12_000,
+                max_word_rarity: 120_000,
                 irregular_hint_bias: 2.0,
                 rare_kanji_hint_rank: 2_000,
-                rare_kanji_hint_bias: 1.5,
-                rare_word_hint_rank: 30_000,
-                rare_word_hint_bias: 1.5,
+                rare_kanji_hint_bias: 2.0,
+                rare_word_hint_rank: 48_000,
+                rare_word_hint_bias: 2.0,
+                num_hints,
+                guarantee_answer_by,
+            },
+            Difficulty::Lunatic2 => PuzzleOptions {
+                min_kanji_class: KanjiClass::Joyo,
+                max_kanji_class: KanjiClass::All,
+                rare_kanji_rank: 3_000,
+                rare_kanji_bias: 2.0,
+                min_word_kanji_class: KanjiClass::Kyoiku,
+                max_word_kanji_class: KanjiClass::All,
+                min_word_rarity: 12_000,
+                max_word_rarity: ESTIMATED_RANK_MAX,
+                irregular_hint_bias: 2.0,
+                rare_kanji_hint_rank: 3_000,
+                rare_kanji_hint_bias: 2.0,
+                rare_word_hint_rank: 48_000,
+                rare_word_hint_bias: 2.0,
                 num_hints,
                 guarantee_answer_by,
             },
@@ -216,7 +258,7 @@ impl ReqPuzzleOptions {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 struct ResPuzzle {
     hints: Vec<ResHint>,
     extra_hints: Vec<ResHint>,
@@ -245,7 +287,7 @@ impl ResPuzzle {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct ResHint {
     pub answer: Loc,
     pub hint: Ji,
@@ -269,6 +311,8 @@ impl std::fmt::Display for ResHint {
     }
 }
 
+const MAX_CACHE_LEN: usize = 2;
+
 async fn get_today(
     State(state): State<Arc<ApiState>>,
     extract::Query(payload): extract::Query<ReqTodayPuzzleOptions>,
@@ -283,9 +327,14 @@ async fn get_today(
         Weekday::Sat => Difficulty::Lunatic,
         Weekday::Sun => Difficulty::Normal,
     };
-    let mut g = state.to_generator_seeded(
-        today.timestamp() as u64 + (100 * (payload.mode as u64) + (difficulty as u64)),
-    );
+    let seed =
+        today.timestamp_millis() as u64 + (100 * (payload.mode as u64) + (difficulty as u64));
+    if let Some(puzzle) = state.cache.read().await.get(&seed) {
+        tracing::debug!("Using cache for puzzle {}", seed);
+        return Ok(Json(puzzle.clone()));
+    }
+
+    let mut g = state.to_generator_seeded(seed);
 
     let puzzle = ResPuzzle::new_from_puzzle(
         &g.choose_puzzle(
@@ -298,6 +347,12 @@ async fn get_today(
         &state.kanji_data,
         difficulty,
     );
+    let mut cache = state.cache.write().await;
+    if cache.len() >= MAX_CACHE_LEN {
+        let (k, _) = cache.pop_first().unwrap();
+        tracing::debug!("Removed from cache puzzle {}", k);
+    }
+    cache.insert(seed, puzzle.clone());
     Ok(Json(puzzle))
 }
 

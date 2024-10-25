@@ -1,4 +1,3 @@
-use std::ops::Range;
 use std::time::Instant;
 
 use itertools::Itertools;
@@ -9,12 +8,16 @@ use crate::data::{Ji, KanjiClass, KanjiData, Loc, WordData};
 #[derive(Debug)]
 pub struct PuzzleOptions {
     // Kanji picking options
-    pub kanji_class: KanjiClass,
+    pub min_kanji_class: KanjiClass,
+    pub max_kanji_class: KanjiClass,
     pub rare_kanji_rank: usize,
     pub rare_kanji_bias: f64,
 
     // Hint picking options
-    pub word_rarity_range: Range<usize>,
+    pub min_word_rarity: usize,
+    pub max_word_rarity: usize,
+    pub min_word_kanji_class: KanjiClass, // Applies to words as well
+    pub max_word_kanji_class: KanjiClass, // Applies to words as well
 
     // Hint ordering options
     pub irregular_hint_bias: f64,
@@ -91,7 +94,8 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
             .kanjis
             .values()
             .filter(|k| {
-                self.kanji_data.kanji_metas.get(&k.ji).unwrap().class <= options.kanji_class
+                let class = self.kanji_data.kanji_metas.get(&k.ji).unwrap().class;
+                options.min_kanji_class <= class && class <= options.max_kanji_class
             })
             .collect_vec();
         weighted_shuffle(&ks, &mut self.rng, |k| {
@@ -109,8 +113,16 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
         self.word_data
             .twos
             .values()
-            .skip_while(|x| x.word.rank < options.word_rarity_range.start)
-            .take_while(|x| x.word.rank < options.word_rarity_range.end)
+            .skip_while(|x| x.word.rank <= options.min_word_rarity)
+            .take_while(|x| x.word.rank <= options.max_word_rarity)
+            .filter(|two| {
+                let class_a = self.kanji_data.kanji_metas.get(&two.a).unwrap().class;
+                let class_b = self.kanji_data.kanji_metas.get(&two.b).unwrap().class;
+                options.min_word_kanji_class <= class_a
+                    && class_a <= options.max_word_kanji_class
+                    && options.min_word_kanji_class <= class_b
+                    && class_b <= options.max_word_kanji_class
+            })
             .filter_map(|two| {
                 let (hint, answer, answer_location) = if two.a == answer {
                     (two.b, two.a, Loc::L)

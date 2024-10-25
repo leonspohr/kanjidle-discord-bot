@@ -41,6 +41,7 @@ export enum Difficulty {
   Normal = "normal",
   Hard = "hard",
   Lunatic = "lunatic",
+  Lunatic2 = "lunatic2",
 }
 
 export async function fetchPuzzle(
