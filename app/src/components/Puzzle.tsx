@@ -491,9 +491,10 @@ export default function Puzzle() {
           <Button
             disabled={state.hints >= 1 || state.result !== Result.None}
             className={clsx(
-              "h-[3ch] w-[30ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 disabled:border-stone-600 disabled:text-stone-600 lg:text-2xl xl:text-3xl",
-              state.hints >= 1 &&
-                "disabled:border-amber-600 disabled:text-amber-600",
+              "h-[3ch] w-[30ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 lg:text-2xl xl:text-3xl",
+              state.hints >= 1
+                ? "disabled:border-amber-600 disabled:text-amber-600"
+                : "disabled:border-stone-600 disabled:text-stone-600",
             )}
             onClick={() => {
               void db.game_states.where(game).modify((t) => {
@@ -510,9 +511,10 @@ export default function Puzzle() {
               state.result !== Result.None
             }
             className={clsx(
-              "h-[3ch] w-[30ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 disabled:border-stone-600 disabled:text-stone-600 lg:text-2xl xl:text-3xl",
-              state.hints >= 2 &&
-                "disabled:border-amber-600 disabled:text-amber-600",
+              "h-[3ch] w-[30ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 lg:text-2xl xl:text-3xl",
+              state.hints >= 2
+                ? "disabled:border-amber-600 disabled:text-amber-600"
+                : "disabled:border-stone-600 disabled:text-stone-600",
             )}
             onClick={() => {
               void db.game_states.where(game).modify((t) => {
@@ -531,9 +533,10 @@ export default function Puzzle() {
               state.result !== Result.None
             }
             className={clsx(
-              "h-[3ch] w-[30ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 disabled:border-stone-600 disabled:text-stone-600 lg:text-2xl xl:text-3xl",
-              state.hints >= 3 &&
-                "disabled:border-amber-600 disabled:text-amber-600",
+              "h-[3ch] w-[30ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 lg:text-2xl xl:text-3xl",
+              state.hints >= 3
+                ? "disabled:border-amber-600 disabled:text-amber-600"
+                : "disabled:border-stone-600 disabled:text-stone-600",
             )}
             onClick={() => {
               void db.game_states.where(game).modify((t) => {
@@ -542,70 +545,6 @@ export default function Puzzle() {
             }}
           >
             {state.hints >= 3 ? query.data.answer_meta.radical : "部首"}
-          </Button>
-          <Button
-            disabled={
-              state.hints < 3 ||
-              state.hints >= 4 ||
-              state.result !== Result.None
-            }
-            className={clsx(
-              "flex min-h-[3ch] w-[30ch] flex-row items-center justify-center rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 disabled:border-stone-600 disabled:text-stone-600 lg:text-2xl xl:text-3xl",
-              state.hints >= 4 &&
-                "disabled:border-amber-600 disabled:text-amber-600",
-            )}
-            onClick={() => {
-              void db.game_states.where(game).modify((t) => {
-                t.hints++;
-              });
-            }}
-          >
-            {state.hints >= 4 ? (
-              <span className="text-lg lg:text-xl xl:text-2xl">
-                {query.data.answer_meta.on.join("・")}
-              </span>
-            ) : (
-              "音読み"
-            )}
-          </Button>
-          <Button
-            disabled={
-              state.hints < 4 ||
-              state.hints >= 5 ||
-              state.result !== Result.None
-            }
-            className={clsx(
-              "flex min-h-[3ch] w-[30ch] flex-row items-center justify-center rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 disabled:border-stone-600 disabled:text-stone-600 lg:text-2xl xl:text-3xl",
-              state.hints >= 5 &&
-                "disabled:border-amber-600 disabled:text-amber-600",
-            )}
-            onClick={() => {
-              void db.game_states.where(game).modify((t) => {
-                t.hints++;
-              });
-            }}
-          >
-            {state.hints >= 5 ? (
-              <span className="text-lg lg:text-xl xl:text-2xl">
-                {query.data.answer_meta.kun.map((x, i) => (
-                  <span key={x.toString()}>
-                    {x[1] ? (
-                      <>
-                        {x[0]}
-                        <span className="text-sm lg:text-base xl:text-lg">
-                          {x[1]}
-                        </span>
-                      </>
-                    ) : (
-                      x[0]
-                    )}
-                    {i !== query.data.answer_meta.kun.length - 1 && "・"}
-                  </span>
-                ))}
-              </span>
-            ) : (
-              "訓読み"
-            )}
           </Button>
         </div>
       )}
