@@ -14,7 +14,7 @@ use axum::{
     BoxError, Router,
 };
 use chrono::{Datelike, DurationRound, TimeDelta, Utc, Weekday};
-use data::{Ji, KanjiClass, KanjiData, KanjiMeta, Loc, WordData};
+use data::{Ji, KanjiClass, KanjiData, KanjiMeta, Loc, WordData, ESTIMATED_RANK_MAX};
 use generate::{Generator, Hint, Puzzle, PuzzleOptions};
 use rand::SeedableRng;
 use serde::{Deserialize, Serialize};
@@ -153,11 +153,12 @@ impl ReqPuzzleOptions {
         };
         match self.difficulty {
             Difficulty::Simple => PuzzleOptions {
-                kanji_class: KanjiClass::Kyoiku,
                 min_kanji_class: KanjiClass::Kyoiku,
+                max_kanji_class: KanjiClass::Kyoiku,
                 rare_kanji_rank: 0,
                 rare_kanji_bias: 1.0,
-                word_rarity_range: 0..10_000,
+                min_word_rarity: 0,
+                max_word_rarity: 10_000,
                 irregular_hint_bias: 0.5,
                 rare_kanji_hint_rank: 0,
                 rare_kanji_hint_bias: 1.0,
@@ -167,11 +168,12 @@ impl ReqPuzzleOptions {
                 guarantee_answer_by,
             },
             Difficulty::Easy => PuzzleOptions {
-                kanji_class: KanjiClass::Kyoiku,
                 min_kanji_class: KanjiClass::Kyoiku,
+                max_kanji_class: KanjiClass::Kyoiku,
                 rare_kanji_rank: 0,
                 rare_kanji_bias: 1.0,
-                word_rarity_range: 0..20_000,
+                min_word_rarity: 0,
+                max_word_rarity: 20_000,
                 irregular_hint_bias: 1.0,
                 rare_kanji_hint_rank: 0,
                 rare_kanji_hint_bias: 1.0,
@@ -181,11 +183,12 @@ impl ReqPuzzleOptions {
                 guarantee_answer_by,
             },
             Difficulty::Normal => PuzzleOptions {
-                kanji_class: KanjiClass::Joyo,
                 min_kanji_class: KanjiClass::Kyoiku,
+                max_kanji_class: KanjiClass::Joyo,
                 rare_kanji_rank: 0,
                 rare_kanji_bias: 1.0,
-                word_rarity_range: 0..40_000,
+                min_word_rarity: 0,
+                max_word_rarity: 40_000,
                 irregular_hint_bias: 1.0,
                 rare_kanji_hint_rank: 0,
                 rare_kanji_hint_bias: 1.0,
@@ -195,11 +198,12 @@ impl ReqPuzzleOptions {
                 guarantee_answer_by,
             },
             Difficulty::Hard => PuzzleOptions {
-                kanji_class: KanjiClass::Joyo,
                 min_kanji_class: KanjiClass::Kyoiku,
+                max_kanji_class: KanjiClass::Joyo,
                 rare_kanji_rank: 2_000,
                 rare_kanji_bias: 2.0,
-                word_rarity_range: 10_000..60_000,
+                min_word_rarity: 10_000,
+                max_word_rarity: 60_000,
                 irregular_hint_bias: 2.0,
                 rare_kanji_hint_rank: 2_000,
                 rare_kanji_hint_bias: 2.0,
@@ -209,11 +213,12 @@ impl ReqPuzzleOptions {
                 guarantee_answer_by,
             },
             Difficulty::Lunatic => PuzzleOptions {
-                kanji_class: KanjiClass::Kentei,
                 min_kanji_class: KanjiClass::Kyoiku,
+                max_kanji_class: KanjiClass::Kentei,
                 rare_kanji_rank: 2_000,
                 rare_kanji_bias: 2.0,
-                word_rarity_range: 10_000..100_000,
+                min_word_rarity: 10_000,
+                max_word_rarity: 100_000,
                 irregular_hint_bias: 2.0,
                 rare_kanji_hint_rank: 2_000,
                 rare_kanji_hint_bias: 2.0,
@@ -223,11 +228,12 @@ impl ReqPuzzleOptions {
                 guarantee_answer_by,
             },
             Difficulty::Lunatic2 => PuzzleOptions {
-                kanji_class: KanjiClass::All,
                 min_kanji_class: KanjiClass::Joyo,
+                max_kanji_class: KanjiClass::All,
                 rare_kanji_rank: 3_000,
                 rare_kanji_bias: 4.0,
-                word_rarity_range: 10_000..320_000,
+                min_word_rarity: 10_000,
+                max_word_rarity: ESTIMATED_RANK_MAX,
                 irregular_hint_bias: 2.0,
                 rare_kanji_hint_rank: 3_000,
                 rare_kanji_hint_bias: 4.0,
