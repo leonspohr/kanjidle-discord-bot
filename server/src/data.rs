@@ -2,7 +2,7 @@ use std::{
     collections::{BTreeMap, HashSet},
     fmt::Display,
     fs::File,
-    io::{BufWriter, Write},
+    io::{BufRead, BufReader, BufWriter, Write},
     sync::LazyLock,
 };
 
@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 static ASSET_KANJIS: &str = "assets/wikipedia_kanjis.csv";
 static ASSET_KANJI_METAS: &str = "assets/kanjiten.json";
 static ASSET_WORDS: &str = "assets/jpdb_words.csv";
-static ASSET_NAMES: &str = "assets/jmnedict.json";
+static ASSET_DICTIONARY: &str = "assets/jmdict.json";
 
 static GENERATED_KANJIS: &str = "generated/kanjis.csv";
 static GENERATED_KANJI_METAS: &str = "generated/kanji_metas.json";
@@ -211,6 +211,12 @@ pub fn load_kanjis() -> Result<KanjiData> {
 pub static TWO_KANJI: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^(\p{Han})(\p{Han})$").unwrap());
 
+pub static TWO_KANJI_IN_STRING: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#""(\p{Han}\p{Han})""#).unwrap());
+
+pub static JMDICT_KANJI_PLACE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#""kanji"(.+?)"kana""#).unwrap());
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub enum Loc {
     L,
@@ -235,21 +241,6 @@ pub struct Compound2 {
 #[derive(Debug)]
 pub struct WordData {
     pub twos: IndexMap<String, Compound2>,
-}
-
-#[derive(Debug, Deserialize)]
-struct Jmnedict {
-    words: Vec<JmnedictWord>,
-}
-
-#[derive(Debug, Deserialize)]
-struct JmnedictWord {
-    kanji: Vec<JmnedictKanji>,
-}
-
-#[derive(Debug, Deserialize)]
-struct JmnedictKanji {
-    text: String,
 }
 
 pub fn load_words(kanji_data: &KanjiData) -> Result<WordData> {
@@ -278,16 +269,23 @@ pub fn load_words(kanji_data: &KanjiData) -> Result<WordData> {
             .collect()
         })?
     } else {
-        let file_names = File::open(ASSET_NAMES)?;
-        let parsed: Jmnedict = serde_json::from_reader(file_names)?;
-        let mut names = HashSet::with_capacity(700000);
-        names.extend(
-            parsed
-                .words
-                .into_iter()
-                .flat_map(|w| w.kanji.into_iter().map(|k| k.text)),
+        let file_dict = File::open(ASSET_DICTIONARY)?;
+        let rdr = BufReader::new(file_dict);
+        let mut known_words = HashSet::<String>::with_capacity(1_000_000);
+        known_words.extend(
+            rdr.lines()
+                .filter_map(|str| {
+                    let str = str.ok()?;
+                    let (_, [place]) = JMDICT_KANJI_PLACE.captures(&str)?.extract();
+                    let xs = TWO_KANJI_IN_STRING
+                        .captures_iter(place)
+                        .map(|m| m.extract::<1>().1[0].to_owned())
+                        .collect_vec();
+                    Some(xs)
+                })
+                .flatten(),
         );
-        names.shrink_to_fit();
+        known_words.shrink_to_fit();
 
         let mut rdr = csv::ReaderBuilder::new()
             .delimiter(b'\t')
@@ -301,7 +299,7 @@ pub fn load_words(kanji_data: &KanjiData) -> Result<WordData> {
                     reading: x.get(1)?.into(),
                     rank: x.get(2)?.parse().ok()?,
                 };
-                if names.contains(&word.text) {
+                if !known_words.contains(&word.text) {
                     None
                 } else {
                     let (_, [a, b]) = TWO_KANJI.captures(&word.text)?.extract();
