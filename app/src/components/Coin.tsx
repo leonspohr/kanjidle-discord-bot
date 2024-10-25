@@ -28,7 +28,7 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
             ][i],
             "text-4xl",
             result === Result.None && showExtra + 4 <= i && "blur",
-            "transition-[blur] duration-300 ease-in-out",
+            "transition-[filter] duration-200 ease-in-out",
           )}
         >
           {result === Result.None && showExtra + 4 <= i
@@ -66,7 +66,7 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
             "text-5xl",
             result !== Result.None && "text-blue-500 underline",
             result === Result.None && showExtra + 4 <= i && "blur",
-            "transition-[blur,color] duration-300 ease-in-out",
+            "transition-[filter,color] duration-200 ease-in-out",
           )}
         >
           {result === Result.None && showExtra + 4 <= i ? "何" : w.hint}
