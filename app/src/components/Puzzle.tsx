@@ -695,8 +695,10 @@ function score(state: GameState): string {
   );
   const mode = state.mode === Mode.Hidden ? "隠しヒント" : "クラシック";
   let lines;
-  if (state.result === Result.Lose) {
+  if (state.result === Result.Lose && state.mode === Mode.Classic) {
     lines = ["⬛🟨⬛", "🟨🟥🟨", "⬛🟨⬛"];
+  } else if (state.result === Result.Lose && state.mode === Mode.Hidden) {
+    lines = ["🟨🟨🟨", "🟨🟥🟨", "🟨🟨🟨"];
   } else if (state.mode === Mode.Classic) {
     lines = ["⬛🟩⬛", "🟩✅🟩", "⬛🟩⬛"];
   } else {
