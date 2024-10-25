@@ -593,7 +593,7 @@ export default function Puzzle() {
                 <p>
                   真ん中に漢字１文字を入れてすべての二字熟語を作りましょう！矢印は文字の順番を表します。例えば、このパズルでは「◯折」「◯計」「当◯」「◯代」の◯が求められます。
                 </p>
-                <div className="flex flex-row items-center justify-center gap-2">
+                <div className="flex select-none flex-row items-center justify-center gap-2">
                   <div className="flex flex-col items-center justify-center gap-1">
                     <div className="h-[3ch] w-[12ch] rounded-lg border border-emerald-600 bg-inherit text-center text-base text-emerald-600">
                       部首

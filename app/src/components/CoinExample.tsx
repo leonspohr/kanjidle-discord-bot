@@ -26,7 +26,7 @@ export default function CoinExample({ puzzle, showExtra }: CoinExampleProps) {
             ][i],
             "text-lg",
             showExtra + 4 <= i && "blur",
-            "transition-[blur] duration-300 ease-in-out",
+            "transition-[filter] duration-300 ease-in-out",
           )}
         >
           {showExtra + 4 <= i
@@ -52,7 +52,7 @@ export default function CoinExample({ puzzle, showExtra }: CoinExampleProps) {
             ][i],
             "text-xl",
             showExtra + 4 <= i && "blur",
-            "transition-[blur,color] duration-300 ease-in-out",
+            "transition-[filter,color] duration-300 ease-in-out",
           )}
         >
           {showExtra + 4 <= i ? "何" : w.hint}
