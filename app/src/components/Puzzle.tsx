@@ -565,6 +565,10 @@ export default function Puzzle() {
           >
             {isFullyLoaded && state.hints >= 3
               ? query.data.answer_meta.radical
+                  .split("・")
+                  .some((r) => query.data.answer === r)
+                ? "部首は漢字と同じ"
+                : query.data.answer_meta.radical
               : "部首"}
           </Button>
         </div>
