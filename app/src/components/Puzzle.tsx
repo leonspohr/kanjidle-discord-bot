@@ -283,10 +283,10 @@ export default function Puzzle() {
       </div>
       <div
         className={clsx(
-          "-mt-4 grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out",
-          isFullyLoaded &&
-            state.result !== Result.None &&
-            "mt-0 grid-rows-[1fr]",
+          "-mt-4 grid transition-[grid-template-rows] duration-300 ease-out",
+          isFullyLoaded && state.result !== Result.None
+            ? "mt-0 grid-rows-[1fr]"
+            : "grid-rows-[0fr]",
         )}
       >
         {isFullyLoaded && state.result !== Result.None && (
