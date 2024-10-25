@@ -232,8 +232,8 @@ export default function Puzzle() {
               </MenuItem>
             </MenuItems>
           </Menu>
-          {isFullyLoaded ? (
-            seed === Seed.Today ? (
+          {seed === Seed.Today ? (
+            isFullyLoaded ? (
               <div className="flex h-[3ch] select-none flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-2 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
                 <span>
                   <BiSolidLockAlt />
@@ -241,43 +241,43 @@ export default function Puzzle() {
                 <span>{difficultyName(query.data.difficulty)}</span>
               </div>
             ) : (
-              <Menu>
-                <MenuButton className="flex h-[3ch] flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-2 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
-                  {({ active }) => (
-                    <>
-                      <span>
-                        {active ? <BiSolidDownArrow /> : <BiSolidRightArrow />}
-                      </span>
-                      <span>{difficultyName(query.data.difficulty)}</span>
-                    </>
-                  )}
-                </MenuButton>
-                <MenuItems
-                  anchor="bottom"
-                  className="my-1 flex flex-col items-center justify-center rounded-lg border border-zinc-600 bg-zinc-200 p-1 text-base text-zinc-900 lg:text-lg xl:text-xl dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-zinc-800"
-                >
-                  {Object.values(Difficulty).map((d, i) => (
-                    <>
-                      <MenuItem key={d}>
-                        <Button
-                          className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600"
-                          onClick={() => {
-                            setDifficulty(d);
-                          }}
-                        >
-                          {difficultyName(d)}
-                        </Button>
-                      </MenuItem>
-                      {i !== Object.values(Difficulty).length - 1 && (
-                        <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-200/25" />
-                      )}
-                    </>
-                  ))}
-                </MenuItems>
-              </Menu>
+              <span className="blur-sm">何々級・Load</span>
             )
           ) : (
-            <span className="blur-sm">何々級・Load</span>
+            <Menu>
+              <MenuButton className="flex h-[3ch] flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-2 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
+                {({ active }) => (
+                  <>
+                    <span>
+                      {active ? <BiSolidDownArrow /> : <BiSolidRightArrow />}
+                    </span>
+                    <span>{difficultyName(difficulty)}</span>
+                  </>
+                )}
+              </MenuButton>
+              <MenuItems
+                anchor="bottom"
+                className="my-1 flex flex-col items-center justify-center rounded-lg border border-zinc-600 bg-zinc-200 p-1 text-base text-zinc-900 lg:text-lg xl:text-xl dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-zinc-800"
+              >
+                {Object.values(Difficulty).map((d, i) => (
+                  <>
+                    <MenuItem key={d}>
+                      <Button
+                        className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600"
+                        onClick={() => {
+                          setDifficulty(d);
+                        }}
+                      >
+                        {difficultyName(d)}
+                      </Button>
+                    </MenuItem>
+                    {i !== Object.values(Difficulty).length - 1 && (
+                      <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-200/25" />
+                    )}
+                  </>
+                ))}
+              </MenuItems>
+            </Menu>
           )}
         </div>
       </div>
