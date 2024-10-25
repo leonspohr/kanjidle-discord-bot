@@ -315,7 +315,8 @@ async fn get_today(
         Weekday::Sat => Difficulty::Lunatic,
         Weekday::Sun => Difficulty::Normal,
     };
-    let seed = today.timestamp() as u64 + (100 * (payload.mode as u64) + (difficulty as u64));
+    let seed =
+        today.timestamp_millis() as u64 + (100 * (payload.mode as u64) + (difficulty as u64));
     if let Some(puzzle) = state.cache.read().await.get(&seed) {
         tracing::debug!("Using cache for puzzle {}", seed);
         return Ok(Json(puzzle.clone()));
