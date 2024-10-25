@@ -446,23 +446,23 @@ export default function Puzzle() {
         </Button>
       </form>
 
-      <div className="flex min-h-[2.5ch] max-w-[17.25ch] select-none flex-row flex-wrap items-center justify-start gap-4 lg:gap-5 xl:gap-6">
+      <div className="flex min-h-[2.6ch] max-w-[17.8ch] select-none flex-row flex-wrap items-center justify-start gap-4 lg:gap-5 xl:gap-6">
         {isFullyLoaded ? (
           state.attempts.length ? (
             state.attempts.map((x, i) => (
               <div
                 key={String(x) + i}
                 className={clsx(
-                  "flex h-[2.5ch] w-[2.5ch] flex-row items-center justify-center rounded-md border",
+                  "flex h-[2.6ch] w-[2.6ch] flex-row items-center justify-center rounded-md border pb-1",
                   x === query.data.answer
                     ? "border-green-600 text-green-600"
                     : "border-red-600 text-red-600",
                 )}
               >
                 {x ?? (
-                  <div className="grid grid-cols-2 grid-rows-2 text-xs font-semibold leading-tight lg:text-sm xl:text-base">
-                    <div>ス</div>
-                    <div>キ</div>
+                  <div className="grid grid-cols-2 grid-rows-2 text-xs font-semibold lg:text-sm xl:text-base">
+                    <div className="translate-y-0.5">ス</div>
+                    <div className="translate-y-0.5">キ</div>
                     <div>ッ</div>
                     <div>プ</div>
                   </div>
