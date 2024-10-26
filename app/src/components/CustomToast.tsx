@@ -16,7 +16,7 @@ export default function CustomToast({ children, type }: CustomToastProps) {
   return (
     <div
       className={clsx(
-        "rounded-lg border bg-zinc-200 text-lg shadow-md lg:text-xl xl:text-2xl dark:bg-zinc-900 dark:shadow-zinc-800",
+        "rounded-lg border bg-zinc-100 text-lg shadow-md lg:text-xl xl:text-2xl dark:bg-zinc-900 dark:shadow-zinc-800",
         "grid grid-cols-[auto_1fr] items-center gap-2 p-2",
         type === "success" && "border-emerald-600 text-emerald-600",
         type === "error" && "border-rose-600 text-rose-600",

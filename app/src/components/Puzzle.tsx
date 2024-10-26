@@ -204,7 +204,7 @@ export default function Puzzle() {
             </MenuButton>
             <MenuItems
               anchor="bottom"
-              className="my-1 flex flex-col items-center justify-center rounded-lg border border-zinc-600 bg-zinc-200 p-1 text-base text-zinc-900 lg:text-lg xl:text-xl dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-zinc-800"
+              className="my-1 flex flex-col items-center justify-center rounded-lg border border-zinc-600 bg-zinc-100 p-1 text-base text-zinc-900 lg:text-lg xl:text-xl dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-zinc-800"
             >
               <MenuItem>
                 <Button
@@ -216,7 +216,7 @@ export default function Puzzle() {
                   {today.toFormat("yyyy年LL月dd日")}
                 </Button>
               </MenuItem>
-              <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-200/25" />
+              <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-100/25" />
               <MenuItem>
                 <Button
                   className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600"
@@ -257,7 +257,7 @@ export default function Puzzle() {
               </MenuButton>
               <MenuItems
                 anchor="bottom"
-                className="my-1 flex flex-col items-center justify-center rounded-lg border border-zinc-600 bg-zinc-200 p-1 text-base text-zinc-900 lg:text-lg xl:text-xl dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-zinc-800"
+                className="my-1 flex flex-col items-center justify-center rounded-lg border border-zinc-600 bg-zinc-100 p-1 text-base text-zinc-900 lg:text-lg xl:text-xl dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-zinc-800"
               >
                 {Object.values(Difficulty).map((d, i) => (
                   <>
@@ -272,7 +272,7 @@ export default function Puzzle() {
                       </Button>
                     </MenuItem>
                     {i !== Object.values(Difficulty).length - 1 && (
-                      <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-200/25" />
+                      <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-100/25" />
                     )}
                   </>
                 ))}
