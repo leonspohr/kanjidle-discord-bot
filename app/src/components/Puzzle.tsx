@@ -712,7 +712,7 @@ function difficultyName(d: Difficulty): string {
     case Difficulty.Lunatic:
       return "奇譚級・Lunatic";
     case Difficulty.Lunatic2:
-      return "奇譚級・Lunatic+";
+      return "倜儻級・Profound";
   }
 }
 
