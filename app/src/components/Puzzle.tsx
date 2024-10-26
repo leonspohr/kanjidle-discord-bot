@@ -241,7 +241,12 @@ export default function Puzzle() {
                 <span>{difficultyName(query.data.difficulty)}</span>
               </div>
             ) : (
-              <span className="blur-sm">何々級・Load</span>
+              <div className="flex h-[3ch] select-none flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-2 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
+                <span>
+                  <BiSolidLockAlt />
+                </span>
+                <span className="blur-sm">読込級・Load</span>
+              </div>
             )
           ) : (
             <Menu>
