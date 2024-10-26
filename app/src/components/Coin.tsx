@@ -85,8 +85,8 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
         rel="noopener noreferrer"
         className={clsx(
           "text-6xl grid-in-qq",
-          result === Result.Win && "text-green-600 underline",
-          result === Result.Lose && "text-red-600 underline",
+          result === Result.Win && "text-emerald-600 underline",
+          result === Result.Lose && "text-rose-600 underline",
         )}
       >
         {result === Result.None ? "？" : puzzle.answer}

@@ -455,8 +455,8 @@ export default function Puzzle() {
                 className={clsx(
                   "flex h-[2.6ch] w-[2.6ch] flex-row items-center justify-center rounded-md border pb-1",
                   x === query.data.answer
-                    ? "border-green-600 text-green-600"
-                    : "border-red-600 text-red-600",
+                    ? "border-emerald-600 text-emerald-600"
+                    : "border-rose-600 text-rose-600",
                 )}
               >
                 {x ?? (
