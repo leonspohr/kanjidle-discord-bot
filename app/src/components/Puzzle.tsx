@@ -758,7 +758,7 @@ function score(state: GameState): string {
   lines[1] += " " + mode;
   if (state.result === Result.Lose) {
     lines[2] +=
-      state.mode === Mode.Hidden ? " X/5" : ` ${state.attempts.length}でギブ！`;
+      state.mode === Mode.Hidden ? " X/5" : ` ${state.attempts.length}回でギブ！`;
   } else {
     lines[2] +=
       state.mode === Mode.Hidden
