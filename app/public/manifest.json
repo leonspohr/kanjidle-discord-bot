@@ -1,0 +1,13 @@
+{
+  "short_name": "Kanjidle",
+  "name": "Kanjidle - 漢字パズル",
+  "icons": [
+    { "src": "icon192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "lang": "ja",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#18181b",
+  "background_color": "#18181b"
+}
