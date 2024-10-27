@@ -450,8 +450,7 @@ export default function Puzzle() {
           {mode === Mode.Hidden ? "スキップ" : "ギブ"}
         </Button>
       </form>
-
-      <div className="flex min-h-[2.6ch] max-w-[17.8ch] select-none flex-row flex-wrap items-center justify-start gap-4 lg:gap-5 xl:gap-6">
+      <div className="flex min-h-[2.6ch] max-w-[20ch] select-none flex-row flex-wrap items-center justify-center gap-4 lg:gap-5 xl:gap-6">
         {isFullyLoaded ? (
           state.attempts.length ? (
             state.attempts.map((x, i) => (
@@ -758,7 +757,9 @@ function score(state: GameState): string {
   lines[1] += " " + mode;
   if (state.result === Result.Lose) {
     lines[2] +=
-      state.mode === Mode.Hidden ? " X/5" : ` ${state.attempts.length}回でギブ！`;
+      state.mode === Mode.Hidden
+        ? " X/5"
+        : ` ${state.attempts.length}回でギブ！`;
   } else {
     lines[2] +=
       state.mode === Mode.Hidden
