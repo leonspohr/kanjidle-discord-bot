@@ -44,7 +44,7 @@ export default function Puzzle() {
     Difficulty.Normal,
   );
 
-  const today = DateTime.utc().startOf("day");
+  const [today, setToday] = useState(DateTime.utc().startOf("day"));
   const date = useMemo(() => (seed === Seed.Today ? +today : 0), [seed, today]);
 
   const query = useQuery({
@@ -131,10 +131,11 @@ export default function Puzzle() {
       const nextDay = today.plus({ days: 1 });
       const interval = setInterval(() => {
         const diff = nextDay.diffNow(["hours", "minutes", "seconds"]);
-        setDiff(diff);
-        if (diff.toMillis() <= 0) {
-          window.location.reload();
+        if (+today !== +DateTime.utc().startOf("day")) {
+          console.log("Going to next day");
+          setToday(DateTime.utc().startOf("day"));
         }
+        setDiff(diff);
       }, 1_000);
       return () => clearInterval(interval);
     }
