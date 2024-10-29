@@ -43,7 +43,7 @@ export default function SettingsDialog({
           className="fixed inset-0 bg-black/30"
           onClick={() => onClose()}
         />
-        <DialogPanel className="z-10 flex max-w-[500px] flex-col items-center justify-center gap-4 rounded-lg border bg-zinc-100 p-4 text-2xl text-zinc-900 shadow-lg lg:text-3xl xl:text-4xl dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-zinc-800">
+        <DialogPanel className="z-10 flex max-w-[500px] flex-col items-center justify-center gap-4 rounded-lg border border-zinc-600 bg-zinc-100 p-4 text-2xl text-zinc-900 shadow-lg lg:text-3xl xl:text-4xl dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-zinc-800">
           <div className="flex w-full items-center justify-between">
             <DialogTitle>設定</DialogTitle>
             <Button
