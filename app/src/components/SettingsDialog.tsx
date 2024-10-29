@@ -40,10 +40,14 @@ export default function SettingsDialog({
     <Dialog open={isOpen} onClose={onClose} className="relative z-20">
       <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
         <DialogBackdrop
-          className="fixed inset-0 bg-black/30"
+          transition
+          className="fixed inset-0 bg-black/30 backdrop-blur-md duration-200 data-[closed]:backdrop-blur-none"
           onClick={() => onClose()}
         />
-        <DialogPanel className="z-10 flex max-w-[500px] flex-col items-center justify-center gap-4 rounded-lg border border-zinc-600 bg-zinc-100 p-4 text-2xl text-zinc-900 shadow-lg lg:text-3xl xl:text-4xl dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-zinc-800">
+        <DialogPanel
+          transition
+          className="data-[closed]:transform-[scale(95%)] z-10 flex max-w-[500px] flex-col items-center justify-center gap-4 rounded-lg border border-zinc-600 bg-zinc-100 p-4 text-2xl text-zinc-900 shadow-lg duration-200 ease-out data-[closed]:opacity-0 lg:text-3xl xl:text-4xl dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-zinc-800"
+        >
           <div className="flex w-full items-center justify-between">
             <DialogTitle>設定</DialogTitle>
             <Button
