@@ -1,6 +1,8 @@
 import clsx from "clsx";
+import { useContext } from "react";
 
 import { Result } from "../db/Result";
+import SettingsContext from "../providers/SettingsContext";
 import { Loc, ResPuzzle } from "../query/api";
 
 export interface CoinProps {
@@ -10,6 +12,8 @@ export interface CoinProps {
 }
 
 export default function Coin({ puzzle, showExtra, result }: CoinProps) {
+  const [settings] = useContext(SettingsContext);
+
   return (
     <div className="grid select-none grid-cols-coin grid-rows-coin place-items-center grid-areas-coin">
       {puzzle.hints.concat(puzzle?.extra_hints ?? []).map((w, i) => (
@@ -63,7 +67,7 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
               "-translate-x-1.5 -translate-y-1.5 place-self-start grid-in-w7",
               "-translate-y-1.5 translate-x-1.5 self-start justify-self-end grid-in-w8",
             ][i],
-            "text-5xl",
+            "relative text-5xl",
             result !== Result.None && "text-blue-500 underline",
             result === Result.None && showExtra + 4 <= i && "blur",
             "transition-[filter,color] duration-200 ease-in-out",
@@ -71,6 +75,18 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
         >
           {result === Result.None && showExtra + 4 <= i ? "何" : w.hint}
           <span> </span>
+          {settings.showWords && (
+            <>
+              <span className="absolute -right-5 bottom-0 text-sm [writing-mode:vertical-rl]">
+                {w.answer === Loc.L
+                  ? (result === Result.None ? "◯" : puzzle.answer) +
+                    (showExtra + 4 <= i ? "何" : w.hint)
+                  : (showExtra + 4 <= i ? "何" : w.hint) +
+                    (result === Result.None ? "◯" : puzzle.answer)}
+              </span>
+              <span> </span>
+            </>
+          )}
         </a>
       ))}
       <a

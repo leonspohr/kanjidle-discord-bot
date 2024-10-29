@@ -4,21 +4,12 @@ export default function useLocalStorage<T extends string>(
   key: string,
   initial: T,
 ): [T, (newValue: T) => void, () => void] {
-  const first =
-    localStorage.getItem(key) ??
-    (() => {
-      localStorage.setItem(key, initial);
-      return initial;
-    })();
-  const [value, setValue_] = useState(first);
-  const setValue = useCallback(
-    (newValue: T) => {
-      localStorage.setItem(key, newValue);
-      setValue_(newValue);
-    },
-    [key],
+  return useParsedLocalStorage(
+    key,
+    initial,
+    (x) => x as T,
+    (x) => x,
   );
-  return [value as T, setValue, () => localStorage.removeItem(key)];
 }
 
 export function useJSONLocalStorage<T>(
@@ -39,12 +30,19 @@ export function useParsedLocalStorage<T>(
   parse: (s: string) => T,
   stringify: (v: T) => string,
 ): [T, (newValue: T) => void, () => void] {
-  const first = localStorage.getItem(key)
-    ? parse(localStorage.getItem(key)!)
-    : (() => {
-        localStorage.setItem(key, stringify(initial));
-        return initial;
-      })();
+  let first;
+  if (localStorage.getItem(key)) {
+    try {
+      first = parse(localStorage.getItem(key)!);
+    } catch (err) {
+      console.log("Error on parsing", err);
+      localStorage.setItem(key, stringify(initial));
+      first = initial;
+    }
+  } else {
+    localStorage.setItem(key, stringify(initial));
+    first = initial;
+  }
   const [value, setValue_] = useState<T>(first);
   const setValue = useCallback(
     (newValue: T) => {

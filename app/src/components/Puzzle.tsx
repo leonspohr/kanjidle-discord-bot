@@ -26,7 +26,7 @@ import { DateTime, Duration } from "ts-luxon";
 
 import { db, GameState, GameStateKey } from "../db/db";
 import { Result } from "../db/Result";
-import useLocalStorage, { useJSONLocalStorage } from "../hooks/useLocalStorage";
+import { useJSONLocalStorage } from "../hooks/useLocalStorage";
 import { Difficulty, fetchPuzzle, Loc, Mode, Seed } from "../query/api";
 import Coin from "./Coin";
 import CoinExample from "./CoinExample";
@@ -35,7 +35,7 @@ import CustomToast from "./CustomToast";
 import CustomToaster from "./CustomToaster";
 
 export default function Puzzle() {
-  const [mode, setMode] = useLocalStorage<Mode>("mode", Mode.Hidden);
+  const [mode, setMode] = useJSONLocalStorage<Mode>("mode", Mode.Hidden);
 
   const [seed, setSeed] = useState<Seed>(Seed.Today);
 
