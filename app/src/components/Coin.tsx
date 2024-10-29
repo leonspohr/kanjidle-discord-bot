@@ -80,9 +80,13 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
               <span className="absolute -right-5 bottom-0 text-sm [writing-mode:vertical-rl]">
                 {w.answer === Loc.L
                   ? (result === Result.None ? "◯" : puzzle.answer) +
-                    (showExtra + 4 <= i ? "何" : w.hint)
+                    (result === Result.None && showExtra + 4 <= i
+                      ? "何"
+                      : w.hint)
                   : (showExtra + 4 <= i ? "何" : w.hint) +
-                    (result === Result.None ? "◯" : puzzle.answer)}
+                    (result === Result.None && result === Result.None
+                      ? "◯"
+                      : puzzle.answer)}
               </span>
               <span> </span>
             </>
