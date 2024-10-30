@@ -127,7 +127,7 @@ export default function Puzzle() {
   );
 
   useEffect(() => {
-    if (isFullyLoaded && seed === Seed.Today && state.result !== Result.None) {
+    if (isFullyLoaded && seed === Seed.Today) {
       const nextDay = today.plus({ days: 1 });
       const interval = setInterval(() => {
         const diff = nextDay.diffNow(["hours", "minutes", "seconds"]);
