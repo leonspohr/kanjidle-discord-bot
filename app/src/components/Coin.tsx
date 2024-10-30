@@ -83,10 +83,10 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
                     (result === Result.None && showExtra + 4 <= i
                       ? "何"
                       : w.hint)
-                  : (showExtra + 4 <= i ? "何" : w.hint) +
-                    (result === Result.None && result === Result.None
-                      ? "◯"
-                      : puzzle.answer)}
+                  : (result === Result.None && showExtra + 4 <= i
+                      ? "何"
+                      : w.hint) +
+                    (result === Result.None ? "◯" : puzzle.answer)}
               </span>
               <span> </span>
             </>
