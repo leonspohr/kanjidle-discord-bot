@@ -16,11 +16,11 @@ export default {
         ],
       },
       gridTemplateColumns: {
-        coin: "5rem 3rem 5rem 3rem 5rem",
+        coin: "4.75rem 2.75rem 4.75rem 2.75rem 4.75rem",
         "coin-example": "2rem 1rem 2rem 1rem 2rem",
       },
       gridTemplateRows: {
-        coin: "5rem 3rem 5rem 3rem 5rem",
+        coin: "4.75rem 2.75rem 4.75rem 2.75rem 4.75rem",
         "coin-example": "2rem 1rem 2rem 1rem 2rem",
       },
     },

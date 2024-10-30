@@ -77,7 +77,7 @@ export default function Coin({ puzzle, showExtra, result }: CoinProps) {
           <span> </span>
           {settings.showWords && (
             <>
-              <span className="absolute -right-5 bottom-0 text-sm [writing-mode:vertical-rl]">
+              <span className="absolute -right-4 bottom-0 text-sm [writing-mode:vertical-rl]">
                 {w.answer === Loc.L
                   ? (result === Result.None ? "◯" : puzzle.answer) +
                     (result === Result.None && showExtra + 4 <= i
