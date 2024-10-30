@@ -144,7 +144,7 @@ export default function Puzzle() {
   const [guess, setGuess] = useState("");
 
   return (
-    <div className="container mx-auto my-2 flex flex-col items-center justify-center gap-4">
+    <div className="flex flex-col items-center justify-center gap-4">
       {import.meta.env.DEV && (
         <Button
           className="absolute left-0 top-0 text-base"
