@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::Result;
 use indexmap::IndexMap;
-use itertools::Itertools;
+use itertools::{Either, EitherOrBoth, Itertools};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Deserializer;
@@ -265,7 +265,7 @@ pub struct Compound2 {
     pub word: Word,
     pub a: Ji,
     pub b: Ji,
-    pub irregular: bool,
+    pub irregularness: f64,
 }
 
 #[derive(Debug)]
@@ -287,7 +287,7 @@ pub fn load_words(kanji_data: &KanjiData) -> Result<WordData> {
                     Compound2 {
                         a,
                         b,
-                        irregular: is_reading_irregular(
+                        irregularness: irregularness(
                             &word.text,
                             kanji_data.kanji_metas.get(&a)?,
                             kanji_data.kanji_metas.get(&b)?,
@@ -398,7 +398,7 @@ fn extract_compound2(word: Word, kanji_data: &KanjiData) -> Option<Compound2> {
         Some(Compound2 {
             a,
             b,
-            irregular: is_reading_irregular(
+            irregularness: irregularness(
                 &word.text,
                 kanji_data.kanji_metas.get(&a)?,
                 kanji_data.kanji_metas.get(&b)?,
@@ -409,19 +409,73 @@ fn extract_compound2(word: Word, kanji_data: &KanjiData) -> Option<Compound2> {
 }
 
 // Very rudimentary method of doing this but it should be fine
-// Completely ignores things like okurigana and sound changes
-// And only works on 2-character compounds
-fn is_reading_irregular(word: &str, a: &KanjiMeta, b: &KanjiMeta) -> bool {
-    a.on.iter().any(|r| word.starts_with(r))
-        || a.kun.iter().any(|r| {
-            word.starts_with(&r.0)
-                || word.starts_with(&(r.0.clone() + r.1.as_deref().unwrap_or_default()))
+fn irregularness(word: &str, a: &KanjiMeta, b: &KanjiMeta) -> f64 {
+    let readings_a =
+        a.on.iter()
+            .map(Either::Left)
+            .chain(a.kun.iter().flat_map(|k| match &k.1 {
+                None => vec![Either::Left(&k.0)],
+                Some(_) => vec![Either::Left(&k.0), Either::Right(k)],
+            }));
+    let readings_b =
+        b.on.iter()
+            .map(Either::Left)
+            .chain(b.kun.iter().flat_map(|k| match &k.1 {
+                None => vec![Either::Left(&k.0)],
+                Some(_) => vec![Either::Left(&k.0), Either::Right(k)],
+            }));
+
+    let min_dist = readings_a
+        .cartesian_product(readings_b)
+        .map(|(a, b)| {
+            let mut candidate = String::new();
+            match a {
+                Either::Left(x) => {
+                    candidate += x;
+                }
+                Either::Right(k) => {
+                    candidate += &k.0;
+                    candidate += k.1.as_ref().unwrap();
+                }
+            }
+            match b {
+                Either::Left(x) => {
+                    candidate += x;
+                }
+                Either::Right(k) => {
+                    candidate += &k.0;
+                    candidate += k.1.as_ref().unwrap();
+                }
+            }
+            candidate
         })
-        || b.on.iter().any(|r| word.ends_with(r))
-        || b.kun.iter().any(|r| {
-            word.ends_with(&r.0)
-                || word.ends_with(&(r.0.clone() + r.1.as_deref().unwrap_or_default()))
-        })
+        .filter_map(|s| hamming_distance(word.chars(), s.chars()))
+        .min()
+        .unwrap_or(word.chars().count());
+
+    min_dist as f64 / word.chars().count() as f64
+}
+
+fn hamming_distance<I1, I2, E1, E2>(a: I1, b: I2) -> Option<usize>
+where
+    I1: IntoIterator<Item = E1>,
+    I2: IntoIterator<Item = E2>,
+    E1: PartialEq<E2>,
+{
+    let mut count = 0;
+    for r in a.into_iter().zip_longest(b) {
+        match r {
+            EitherOrBoth::Both(a, b) => {
+                if a != b {
+                    count += 1;
+                }
+            }
+            _ => {
+                return None;
+            }
+        }
+    }
+    Some(count)
 }
 
 fn extract_only_char(x: &str) -> Option<char> {

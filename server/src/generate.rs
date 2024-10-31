@@ -34,7 +34,7 @@ pub struct Hint {
     pub answer_location: Loc,
     pub hint: Ji,
     pub rank: usize,
-    pub irregular: bool,
+    pub irregularness: f64,
 }
 
 #[derive(Debug)]
@@ -131,7 +131,7 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
                     hint,
                     answer_location,
                     answer,
-                    irregular: two.irregular,
+                    irregularness: two.irregularness,
                     rank: two.word.rank,
                 })
             })
@@ -153,10 +153,7 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
             .collect();
         for split in &mut splits {
             *split = weighted_shuffle(split, &mut self.rng, |x| {
-                let b1 = apply_bias(
-                    options.irregular_hint_bias,
-                    if x.irregular { 1.0 } else { 0.0 },
-                );
+                let b1 = apply_bias(options.irregular_hint_bias, x.irregularness);
 
                 let kanji_rank = self.kanji_data.kanjis.get(&x.hint).unwrap().rank;
 
