@@ -3,14 +3,13 @@ use std::time::Instant;
 use itertools::Itertools;
 use ordered_float::OrderedFloat;
 
-use crate::data::{Ji, KanjiClass, KanjiData, Loc, WordData};
+use crate::data::{Ji, KanjiClass, KanjiData, Loc, WordData, MAX_KANJI_RANK, MAX_WORD_RANK};
 
 #[derive(Debug)]
 pub struct PuzzleOptions {
     // Kanji picking options
     pub min_kanji_class: KanjiClass,
     pub max_kanji_class: KanjiClass,
-    pub rare_kanji_rank: usize,
     pub rare_kanji_bias: f64,
 
     // Hint picking options
@@ -21,9 +20,7 @@ pub struct PuzzleOptions {
 
     // Hint ordering options
     pub irregular_hint_bias: f64,
-    pub rare_kanji_hint_rank: usize,
     pub rare_kanji_hint_bias: f64,
-    pub rare_word_hint_rank: usize,
     pub rare_word_hint_bias: f64,
 
     // Puzzle size options
@@ -99,11 +96,10 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
             })
             .collect_vec();
         weighted_shuffle(&ks, &mut self.rng, |k| {
-            if k.rank > options.rare_kanji_rank {
-                options.rare_kanji_bias
-            } else {
-                1.0
-            }
+            apply_bias(
+                options.rare_kanji_bias,
+                k.rank as f64 / MAX_KANJI_RANK as f64,
+            )
         })
         .map(|k| k.ji)
         .collect()
@@ -157,23 +153,23 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
             .collect();
         for split in &mut splits {
             *split = weighted_shuffle(split, &mut self.rng, |x| {
-                let b1 = if x.irregular {
-                    options.irregular_hint_bias
-                } else {
-                    1.0
-                };
-                let b2 = if self.kanji_data.kanjis.get(&x.hint).unwrap().rank
-                    > options.rare_kanji_hint_rank
-                {
-                    options.rare_kanji_hint_bias
-                } else {
-                    1.0
-                };
-                let b3 = if x.rank >= options.rare_word_hint_rank {
-                    options.rare_word_hint_bias
-                } else {
-                    1.0
-                };
+                let b1 = apply_bias(
+                    options.irregular_hint_bias,
+                    if x.irregular { 1.0 } else { 0.0 },
+                );
+
+                let kanji_rank = self.kanji_data.kanjis.get(&x.hint).unwrap().rank;
+
+                let b2 = apply_bias(
+                    options.rare_kanji_hint_bias,
+                    kanji_rank as f64 / MAX_KANJI_RANK as f64,
+                );
+
+                let b3 = apply_bias(
+                    options.rare_word_hint_bias,
+                    x.rank as f64 / MAX_WORD_RANK as f64,
+                );
+
                 b1 * b2 * b3
             })
             .copied()
@@ -242,6 +238,10 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
             })
             .collect()
     }
+}
+
+fn apply_bias(bias: f64, x: f64) -> f64 {
+    1.0 + (bias - 1.0) * x
 }
 
 // https://users.rust-lang.org/t/how-to-split-a-slice-into-n-chunks/40008/3

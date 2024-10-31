@@ -117,6 +117,8 @@ struct RawRadical(Vec<String>, Vec<String>);
 #[allow(dead_code)]
 struct RawVariant(Ji, #[serde(default)] Option<String>);
 
+pub static MAX_KANJI_RANK: usize = 3_000;
+
 #[derive(Debug)]
 pub struct KanjiData {
     pub kanjis: IndexMap<Ji, Kanji>,
@@ -249,7 +251,7 @@ pub static JMDICT_KANA_INFO: LazyLock<Regex> = LazyLock::new(|| {
 
 static ESTIMATED_JMDICT_SIZE: usize = 1_000_000;
 
-pub static ESTIMATED_RANK_MAX: usize = 400_000;
+pub static MAX_WORD_RANK: usize = 400_000;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Word {
@@ -329,7 +331,7 @@ pub fn load_words(kanji_data: &KanjiData) -> Result<WordData> {
                     Some(xs.into_iter().flat_map(|k| {
                         k.1.into_iter().filter_map(move |r| {
                             let word = Word {
-                                rank: ESTIMATED_RANK_MAX,
+                                rank: MAX_WORD_RANK,
                                 text: k.0.clone(),
                                 reading: r,
                             };
