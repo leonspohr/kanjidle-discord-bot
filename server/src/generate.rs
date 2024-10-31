@@ -190,9 +190,11 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
                 .zip(ixes)
                 .map(|(s, ix)| s[ix])
                 .collect_vec();
-            if self
-                .find_unintended_solutions(answer, &chosen_hints)
-                .is_empty()
+
+            if !self.contains_same_hint(&chosen_hints)
+                && self
+                    .find_unintended_solutions(answer, &chosen_hints)
+                    .is_empty()
             {
                 return Some(Puzzle {
                     answer,
@@ -206,6 +208,18 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
         }
 
         None
+    }
+
+    pub fn contains_same_hint(&self, hints: &[&Hint]) -> bool {
+        hints.iter().combinations(2).any(|hs| {
+            let variants = &self
+                .kanji_data
+                .kanji_metas
+                .get(&hs[0].hint)
+                .unwrap()
+                .variants;
+            variants.iter().any(|v| v == &hs[1].hint)
+        })
     }
 
     pub fn find_unintended_solutions(&self, answer: Ji, hints: &[&Hint]) -> Vec<Ji> {

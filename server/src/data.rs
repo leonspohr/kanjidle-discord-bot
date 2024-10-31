@@ -69,6 +69,7 @@ pub struct KanjiMeta {
     pub radical: String,
     pub on: Vec<String>,
     pub kun: Vec<Kun>,
+    pub variants: Vec<Ji>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -88,6 +89,8 @@ struct RawMeta {
     kun: Vec<RawKun>,
     #[serde(default)]
     kanken: String,
+    #[serde(default)]
+    variants: Vec<RawVariant>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -109,6 +112,10 @@ struct RawInnerKun(String, #[serde(default)] Option<String>);
 #[derive(Debug, Deserialize)]
 #[allow(dead_code)]
 struct RawRadical(Vec<String>, Vec<String>);
+
+#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+struct RawVariant(Ji, #[serde(default)] Option<String>);
 
 #[derive(Debug)]
 pub struct KanjiData {
@@ -181,6 +188,7 @@ pub fn load_kanjis() -> Result<KanjiData> {
                         .into_iter()
                         .map(|kun| Kun(kun.0 .0, kun.0 .1))
                         .collect(),
+                    variants: raw.variants.into_iter().map(|v| v.0).collect(),
                 }),
             ))
         })
