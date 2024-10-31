@@ -13,7 +13,7 @@ use axum::{
     routing::get,
     BoxError, Router,
 };
-use chrono::{Datelike, DurationRound, TimeDelta, Utc, Weekday};
+use chrono::{DateTime, Datelike, DurationRound, TimeDelta, Utc, Weekday};
 use data::{Ji, KanjiClass, KanjiData, KanjiMeta, Loc, WordData, ESTIMATED_RANK_MAX};
 use generate::{Generator, Hint, Puzzle, PuzzleOptions};
 use rand::SeedableRng;
@@ -81,9 +81,18 @@ async fn main() -> Result<()> {
     let duration = start.elapsed();
     tracing::info!("Loaded words in {duration:?}");
 
+    #[cfg(feature = "any-date")]
+    let app = Router::new()
+        .route("/v1/day", get(get_day))
+        .route("/v1/today", get(get_today))
+        .route("/v1/random", get(get_random));
+
+    #[cfg(not(feature = "any-date"))]
     let app = Router::new()
         .route("/v1/today", get(get_today))
-        .route("/v1/random", get(get_random))
+        .route("/v1/random", get(get_random));
+
+    let app = app
         .with_state(Arc::new(ApiState {
             word_data,
             kanji_data,
@@ -125,6 +134,13 @@ struct ReqPuzzleOptions {
 #[derive(Debug, Deserialize)]
 struct ReqTodayPuzzleOptions {
     mode: ReqMode,
+}
+
+#[cfg(feature = "any-date")]
+#[derive(Debug, Deserialize)]
+struct ReqDayPuzzleOptions {
+    mode: ReqMode,
+    date: i64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
@@ -311,31 +327,19 @@ impl std::fmt::Display for ResHint {
     }
 }
 
-const MAX_CACHE_LEN: usize = 2;
-
-async fn get_today(
+#[cfg(feature = "any-date")]
+async fn get_day(
     State(state): State<Arc<ApiState>>,
-    extract::Query(payload): extract::Query<ReqTodayPuzzleOptions>,
+    extract::Query(payload): extract::Query<ReqDayPuzzleOptions>,
 ) -> Result<Json<ResPuzzle>, StatusCode> {
-    let today = Utc::now().duration_trunc(TimeDelta::days(1)).unwrap();
-    let difficulty = match today.weekday() {
-        Weekday::Mon => Difficulty::Easy,
-        Weekday::Tue => Difficulty::Normal,
-        Weekday::Wed => Difficulty::Normal,
-        Weekday::Thu => Difficulty::Hard,
-        Weekday::Fri => Difficulty::Hard,
-        Weekday::Sat => Difficulty::Lunatic,
-        Weekday::Sun => Difficulty::Normal,
-    };
-    let seed =
-        today.timestamp_millis() as u64 + (100 * (payload.mode as u64) + (difficulty as u64));
-    if let Some(puzzle) = state.cache.read().await.get(&seed) {
-        tracing::debug!("Using cache for puzzle {}", seed);
-        return Ok(Json(puzzle.clone()));
-    }
+    let today = DateTime::from_timestamp_millis(payload.date)
+        .unwrap()
+        .duration_trunc(TimeDelta::days(1))
+        .unwrap();
+    let difficulty = get_difficulty(today);
+    let seed = get_seed(today, payload.mode, difficulty);
 
     let mut g = state.to_generator_seeded(seed);
-
     let puzzle = ResPuzzle::new_from_puzzle(
         &g.choose_puzzle(
             &ReqPuzzleOptions {
@@ -347,12 +351,44 @@ async fn get_today(
         &state.kanji_data,
         difficulty,
     );
+    Ok(Json(puzzle))
+}
+
+const MAX_CACHE_LEN: usize = 2;
+
+async fn get_today(
+    State(state): State<Arc<ApiState>>,
+    extract::Query(payload): extract::Query<ReqTodayPuzzleOptions>,
+) -> Result<Json<ResPuzzle>, StatusCode> {
+    let today = Utc::now().duration_trunc(TimeDelta::days(1)).unwrap();
+    let difficulty = get_difficulty(today);
+    let seed = get_seed(today, payload.mode, difficulty);
+
+    if let Some(puzzle) = state.cache.read().await.get(&seed) {
+        tracing::debug!("Using cache for puzzle {}", seed);
+        return Ok(Json(puzzle.clone()));
+    }
+
+    let mut g = state.to_generator_seeded(seed);
+    let puzzle = ResPuzzle::new_from_puzzle(
+        &g.choose_puzzle(
+            &ReqPuzzleOptions {
+                mode: payload.mode,
+                difficulty,
+            }
+            .to_puzzle_options(),
+        ),
+        &state.kanji_data,
+        difficulty,
+    );
+
     let mut cache = state.cache.write().await;
     if cache.len() >= MAX_CACHE_LEN {
         let (k, _) = cache.pop_first().unwrap();
         tracing::debug!("Removed from cache puzzle {}", k);
     }
     cache.insert(seed, puzzle.clone());
+
     Ok(Json(puzzle))
 }
 
@@ -361,11 +397,26 @@ async fn get_random(
     extract::Query(payload): extract::Query<ReqPuzzleOptions>,
 ) -> Result<Json<ResPuzzle>, StatusCode> {
     let mut g = state.to_generator_random();
-
     let puzzle = ResPuzzle::new_from_puzzle(
         &g.choose_puzzle(&payload.to_puzzle_options()),
         &state.kanji_data,
         payload.difficulty,
     );
     Ok(Json(puzzle))
+}
+
+fn get_seed(date: DateTime<Utc>, mode: ReqMode, difficulty: Difficulty) -> u64 {
+    date.timestamp_millis() as u64 + (100 * (mode as u64) + (difficulty as u64))
+}
+
+fn get_difficulty(day: DateTime<Utc>) -> Difficulty {
+    match day.weekday() {
+        Weekday::Mon => Difficulty::Easy,
+        Weekday::Tue => Difficulty::Normal,
+        Weekday::Wed => Difficulty::Normal,
+        Weekday::Thu => Difficulty::Hard,
+        Weekday::Fri => Difficulty::Hard,
+        Weekday::Sat => Difficulty::Lunatic,
+        Weekday::Sun => Difficulty::Normal,
+    }
 }
