@@ -517,7 +517,13 @@ export default function Puzzle() {
             }}
           >
             {isFullyLoaded && state.hints >= 1
-              ? query.data.answer_meta.level
+              ? query.data.answer_meta.level === ""
+                ? "配当外"
+                : query.data.answer_meta.level === "0101j"
+                  ? "1級・準1級"
+                  : (query.data.answer_meta.level.endsWith("j") ? "準" : "") +
+                    query.data.answer_meta.level.replace(/^0|j$/g, "") +
+                    "級"
               : "漢検レベル"}
           </Button>
           <Button

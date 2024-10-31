@@ -9,12 +9,13 @@ use std::{
 use anyhow::Result;
 use indexmap::IndexMap;
 use itertools::Itertools;
-use kana;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use serde_json::Deserializer;
 
 static ASSET_KANJIS: &str = "assets/wikipedia_kanjis.csv";
-static ASSET_KANJI_METAS: &str = "assets/kanjiten.json";
+static ASSET_KANJI_METAS: &str = "assets/kanjiten.jsonl";
+static ASSET_KANJI_RADICALS: &str = "assets/radicals.json";
 static ASSET_WORDS: &str = "assets/jpdb_words.csv";
 static ASSET_DICTIONARY: &str = "assets/jmdict.json";
 
@@ -77,14 +78,37 @@ pub struct Kun(
 );
 
 #[derive(Debug, Deserialize)]
-struct KanjiMetaRaw {
-    ji: Ji,
-    on: String,
-    kun: String,
-    tags: String,
-    _desc: Vec<String>,
-    meta: BTreeMap<String, String>,
+struct RawMeta {
+    kanji: Ji,
+    radical: Vec<Ji>,
+    strokes: RawStrokes,
+    #[serde(default)]
+    on: Vec<RawOn>,
+    #[serde(default)]
+    kun: Vec<RawKun>,
+    #[serde(default)]
+    kanken: String,
 }
+
+#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+struct RawStrokes(usize, Vec<(String, usize, usize)>);
+
+#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+struct RawOn(String, #[serde(default)] Option<String>);
+
+#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+struct RawKun(RawInnerKun, #[serde(default)] Option<String>);
+
+#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+struct RawInnerKun(String, #[serde(default)] Option<String>);
+
+#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+struct RawRadical(Vec<String>, Vec<String>);
 
 #[derive(Debug)]
 pub struct KanjiData {
@@ -130,53 +154,38 @@ pub fn load_kanjis() -> Result<KanjiData> {
         .map(|x| x.map_err(anyhow::Error::from))
         .collect::<Result<IndexMap<_, _>>>()?;
 
-    let meta_file = File::open(ASSET_KANJI_METAS)?;
-    let json: Vec<KanjiMetaRaw> = serde_json::from_reader(meta_file)?;
-    let kanji_metas = json
-        .iter()
-        .filter_map(|raw| {
+    let file_radicals = File::open(ASSET_KANJI_RADICALS)?;
+    let radicals = serde_json::from_reader::<_, BTreeMap<Ji, RawRadical>>(file_radicals)?;
+
+    let file_metas = File::open(ASSET_KANJI_METAS)?;
+    let rdr = BufReader::new(file_metas);
+    let stream = Deserializer::from_reader(rdr);
+    let kanji_metas = stream
+        .into_iter::<RawMeta>()
+        .filter_map_ok(|raw| {
             Some((
-                raw.ji,
+                raw.kanji,
                 (KanjiMeta {
-                    level: kana::wide2ascii(raw.tags.split_whitespace().last()?),
-                    class: raw
-                        .tags
-                        .split_whitespace()
-                        .map(|t| match t {
-                            "教育漢字" => KanjiClass::Kyoiku,
-                            "常用漢字" => KanjiClass::Joyo,
-                            s if s.contains("級") => KanjiClass::Kentei,
-                            _ => KanjiClass::All,
-                        })
-                        .next()
-                        .unwrap_or(KanjiClass::All),
-                    stroke_count: kana::wide2ascii(raw.meta.get("画数")?.split("画").next()?)
-                        .parse()
-                        .ok()?,
-                    radical: raw
-                        .meta
-                        .get("部首")?
-                        .split("（")
-                        .next()?
-                        .split_whitespace()
-                        .join("・"),
-                    on: raw.on.split(" ").map(String::from).collect(),
+                    class: match &*raw.kanken {
+                        "10" | "09" | "08" | "07" | "06" | "05" => KanjiClass::Kyoiku,
+                        "04" | "03" | "02j" | "02" => KanjiClass::Joyo,
+                        "01j" | "01" | "0101j" => KanjiClass::Kentei,
+                        _ => KanjiClass::All,
+                    },
+                    level: raw.kanken,
+                    stroke_count: raw.strokes.0,
+                    radical: radicals.get(&raw.radical[0]).unwrap().0.join("・"),
+                    on: raw.on.into_iter().map(|on| on.0).collect(),
                     kun: raw
                         .kun
-                        .split(" ")
-                        .map(|s| {
-                            let mut xs = s.split("（");
-                            let x = xs.next().unwrap();
-                            Kun(
-                                x.to_string(),
-                                xs.next().map(|y| y[0..y.len() - 1].to_string()),
-                            )
-                        })
+                        .into_iter()
+                        .map(|kun| Kun(kun.0 .0, kun.0 .1))
                         .collect(),
                 }),
             ))
         })
-        .collect::<IndexMap<_, _>>();
+        .map(|x| x.map_err(anyhow::Error::from))
+        .collect::<Result<IndexMap<_, _>>>()?;
 
     let kanjis = kanjis
         .into_iter()
