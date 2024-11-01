@@ -161,18 +161,22 @@ export default function Puzzle() {
     ) {
       if (state.result === Result.Win) {
         void winConfetti();
-        setTimeout(() => {
-          setStatsMode(state.mode);
-          setStatsCopyText(score(state));
-          openStatsDialog();
-        }, 1_000);
+        if (state.date !== 0) {
+          setTimeout(() => {
+            setStatsMode(state.mode);
+            setStatsCopyText(score(state));
+            openStatsDialog();
+          }, 1_000);
+        }
       } else if (state.result === Result.Lose) {
         void loseConfetti();
-        setTimeout(() => {
-          setStatsMode(state.mode);
-          setStatsCopyText(score(state));
-          openStatsDialog();
-        }, 1_000);
+        if (state.date !== 0) {
+          setTimeout(() => {
+            setStatsMode(state.mode);
+            setStatsCopyText(score(state));
+            openStatsDialog();
+          }, 1_000);
+        }
       }
     }
     prevState.current = state;
