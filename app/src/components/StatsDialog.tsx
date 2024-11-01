@@ -208,10 +208,16 @@ export default function StatsDialog({
                             ticks: {
                               color: "rgb(87, 83, 78)",
                             },
+                            grid: {
+                              color: "rgb(87, 83, 78)",
+                            },
                           },
                           y: {
                             ticks: {
                               stepSize: 1,
+                              color: "rgb(87, 83, 78)",
+                            },
+                            grid: {
                               color: "rgb(87, 83, 78)",
                             },
                           },
