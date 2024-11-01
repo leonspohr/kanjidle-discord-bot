@@ -236,7 +236,7 @@ export default function StatsDialog({
                             },
                             y: {
                               ticks: {
-                                precision: 1,
+                                precision: 0,
                                 color: "rgb(87, 83, 78)",
                               },
                               grid: {
