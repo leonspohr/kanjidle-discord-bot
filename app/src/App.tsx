@@ -1,7 +1,7 @@
 import { Button } from "@headlessui/react";
 import { useMediaQuery } from "@react-hook/media-query";
 import { useEffect, useState } from "react";
-import { BiBarChartAlt2, BiCog } from "react-icons/bi";
+import { BiBarChartAlt2, BiCog, BiLogoGithub } from "react-icons/bi";
 
 import Puzzle from "./components/Puzzle";
 import SettingsDialog from "./components/SettingsDialog";
@@ -94,14 +94,14 @@ export default function App() {
             </div>
             <div className="container flex h-[4ch] flex-row items-center justify-between border-t border-stone-600 px-2 text-xs text-stone-600 lg:text-sm xl:text-base">
               <span>スコアの記録はブラウザにローカルに保存されます</span>
-              {/* <a
-              className="scale-150"
-              href="https://github.com/1Computer1/kanjidle"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <BiLogoGithub />
-            </a> */}
+              <a
+                className="scale-150"
+                href="https://github.com/1Computer1/kanjidle"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <BiLogoGithub />
+              </a>
             </div>
           </div>
         </div>
