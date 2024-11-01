@@ -100,8 +100,8 @@ export default function StatsDialog({
         guessCounts[guessCounts.length - 1] += 1;
       }
     }
-    const averageGuesses = sumGuessCounts / numberWon;
-    const averageHints = sumHintCounts / numberWon;
+    const averageGuesses = sumGuessCounts / numberWon || 0;
+    const averageHints = sumHintCounts / numberWon || 0;
 
     return {
       consecutiveFromNow,
