@@ -15,7 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import confetti from "canvas-confetti";
 import clsx from "clsx";
 import { useLiveQuery } from "dexie-react-hooks";
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import {
   BiSolidDownArrow,
@@ -27,6 +27,7 @@ import { DateTime, Duration } from "ts-luxon";
 import { db, GameState, GameStateKey } from "../db/db";
 import { Result } from "../db/Result";
 import { useJSONLocalStorage } from "../hooks/useLocalStorage";
+import StatsContext from "../providers/StatsContext";
 import { Difficulty, fetchPuzzle, Loc, Mode, Seed } from "../query/api";
 import Coin from "./Coin";
 import CoinExample from "./CoinExample";
@@ -35,6 +36,9 @@ import CustomToast from "./CustomToast";
 import CustomToaster from "./CustomToaster";
 
 export default function Puzzle() {
+  const [setStatsMode, setStatsCopyText, openStatsDialog] =
+    useContext(StatsContext);
+
   const [mode, setMode] = useJSONLocalStorage<Mode>("mode", Mode.Hidden);
 
   const [seed, setSeed] = useState<Seed>(Seed.Today);
@@ -143,6 +147,35 @@ export default function Puzzle() {
 
   const [guess, setGuess] = useState("");
 
+  const prevState = useRef(state);
+  useEffect(() => {
+    if (!state || !prevState.current) {
+      prevState.current = state;
+      return;
+    }
+    if (
+      prevState.current.mode === state.mode &&
+      prevState.current.difficulty === state.difficulty &&
+      prevState.current.date === state.date &&
+      prevState.current.result === Result.None
+    ) {
+      if (state.result === Result.Win) {
+        void winConfetti();
+        setTimeout(() => {
+          setStatsCopyText(score(state));
+          openStatsDialog();
+        }, 1_000);
+      } else if (state.result === Result.Lose) {
+        void loseConfetti();
+        setTimeout(() => {
+          setStatsCopyText(score(state));
+          openStatsDialog();
+        }, 1_000);
+      }
+    }
+    prevState.current = state;
+  }, [openStatsDialog, setStatsCopyText, state]);
+
   return (
     <div className="flex flex-col items-center justify-center gap-4">
       {import.meta.env.DEV && (
@@ -165,7 +198,10 @@ export default function Puzzle() {
       <div className="flex flex-row flex-wrap items-center justify-center gap-2 text-base lg:text-lg xl:text-xl">
         <RadioGroup
           value={mode}
-          onChange={setMode}
+          onChange={(m) => {
+            setMode(m);
+            setStatsMode(m);
+          }}
           className="flex flex-col items-center justify-center gap-2"
         >
           <div className="flex flex-col items-center justify-center gap-2">
@@ -302,16 +338,11 @@ export default function Puzzle() {
                 <Button
                   className="h-[3ch] w-[14ch] rounded-lg border border-zinc-600 bg-inherit text-center text-xl enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600 disabled:text-stone-600 lg:text-2xl xl:text-3xl"
                   onClick={() => {
-                    void window.navigator.clipboard.writeText(score(state));
-                    toast(
-                      <CustomToast type="success">コピーしました</CustomToast>,
-                      {
-                        id: "copy",
-                      },
-                    );
+                    setStatsCopyText(score(state));
+                    openStatsDialog();
                   }}
                 >
-                  コピーする
+                  記録を見る
                 </Button>
                 <p className="mx-4 text-center text-sm">
                   {diff.toMillis() <= 0 ? (
@@ -379,24 +410,20 @@ export default function Puzzle() {
                 id: "repeated-input",
               },
             );
-          } else if (guess === query.data.answer) {
-            void db.game_states.where(game).modify((t) => {
-              t.attempts.push(guess);
-              t.result = Result.Win;
-            });
+          } else {
             setGuess("");
-            void winConfetti();
-          } else if (guess !== query.data?.answer) {
-            void db.game_states.where(game).modify((t) => {
-              t.attempts.push(guess);
-            });
-            setGuess("");
-            if (mode === Mode.Hidden && state.attempts.length === 4) {
-              setGuess("");
+            if (guess === query.data.answer) {
               void db.game_states.where(game).modify((t) => {
-                t.result = Result.Lose;
+                t.attempts.push(guess);
+                t.result = Result.Win;
               });
-              void loseConfetti();
+            } else {
+              void db.game_states.where(game).modify((t) => {
+                t.attempts.push(guess);
+                if (mode === Mode.Hidden && state.attempts.length === 4) {
+                  t.result = Result.Lose;
+                }
+              });
             }
           }
         }}
@@ -428,23 +455,18 @@ export default function Puzzle() {
             if (!isFullyLoaded) {
               return;
             }
+            setGuess("");
             if (mode === Mode.Classic) {
               void db.game_states.where(game).modify((t) => {
                 t.result = Result.Lose;
               });
-              void loseConfetti();
-              return;
-            }
-            void db.game_states.where(game).modify((t) => {
-              t.attempts.push(null);
-            });
-            setGuess("");
-            if (state.attempts.length === 4) {
-              setGuess("");
+            } else {
               void db.game_states.where(game).modify((t) => {
-                t.result = Result.Lose;
+                t.attempts.push(null);
+                if (state.attempts.length === 4) {
+                  t.result = Result.Lose;
+                }
               });
-              void loseConfetti();
             }
           }}
         >
@@ -779,21 +801,21 @@ function score(state: GameState): string {
   return lines.join("\n");
 }
 
-function winConfetti() {
-  void confetti({
+async function winConfetti() {
+  await confetti({
     particleCount: 300,
     angle: 90,
     spread: 120,
     startVelocity: 90,
     scalar: 2,
-    ticks: 200,
+    ticks: 100,
     gravity: 1,
     origin: { x: 0.5, y: 1 },
   });
 }
 
-function loseConfetti() {
-  void confetti({
+async function loseConfetti() {
+  await confetti({
     particleCount: 100,
     startVelocity: 70,
     spread: 360,

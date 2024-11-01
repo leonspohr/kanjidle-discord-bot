@@ -1,7 +1,7 @@
 import { Button } from "@headlessui/react";
 import { useMediaQuery } from "@react-hook/media-query";
 import { useEffect, useState } from "react";
-import { BiChart, BiCog } from "react-icons/bi";
+import { BiBarChartAlt2, BiCog } from "react-icons/bi";
 
 import Puzzle from "./components/Puzzle";
 import SettingsDialog from "./components/SettingsDialog";
@@ -23,6 +23,10 @@ export default function App() {
   );
 
   const [statsDialogIsOpen, setStatsDialogIsOpen] = useState(false);
+  const [statsCopyText, setStatsCopyText] = useJSONLocalStorage<string>(
+    "statsCopyText",
+    "",
+  );
   const [statsMode, setStatsMode] = useJSONLocalStorage<Mode>(
     "statsMode",
     Mode.Hidden,
@@ -38,6 +42,7 @@ export default function App() {
       <StatsContext.Provider
         value={[
           setStatsMode,
+          setStatsCopyText,
           () => {
             setStatsDialogIsOpen(true);
           },
@@ -57,25 +62,31 @@ export default function App() {
                 <div className="flex flex-row gap-2 place-self-end grid-in-[buttons]">
                   <Button
                     className="rounded-lg border border-zinc-600 p-1 hover:bg-zinc-600 hover:text-zinc-200 active:bg-zinc-600"
-                    onClick={() => setSettingsDialogIsOpen(true)}
+                    onClick={() => {
+                      setStatsCopyText("");
+                      setStatsDialogIsOpen(true);
+                    }}
+                  >
+                    <BiBarChartAlt2 />
+                  </Button>
+                  <StatsDialog
+                    copyText={statsCopyText}
+                    mode={statsMode}
+                    onModeChange={setStatsMode}
+                    isOpen={statsDialogIsOpen}
+                    onClose={() => setStatsDialogIsOpen(false)}
+                  />
+                  <Button
+                    className="rounded-lg border border-zinc-600 p-1 hover:bg-zinc-600 hover:text-zinc-200 active:bg-zinc-600"
+                    onClick={() => {
+                      setSettingsDialogIsOpen(true);
+                    }}
                   >
                     <BiCog />
                   </Button>
                   <SettingsDialog
                     isOpen={settingsDialogIsOpen}
                     onClose={() => setSettingsDialogIsOpen(false)}
-                  />
-                  <Button
-                    className="rounded-lg border border-zinc-600 p-1 hover:bg-zinc-600 hover:text-zinc-200 active:bg-zinc-600"
-                    onClick={() => setStatsDialogIsOpen(true)}
-                  >
-                    <BiChart />
-                  </Button>
-                  <StatsDialog
-                    mode={statsMode}
-                    onModeChange={setStatsMode}
-                    isOpen={statsDialogIsOpen}
-                    onClose={() => setStatsDialogIsOpen(false)}
                   />
                 </div>
               </div>
