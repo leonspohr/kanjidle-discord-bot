@@ -16,6 +16,7 @@ import { BiX } from "react-icons/bi";
 import { db } from "../db/db";
 import { Result } from "../db/Result";
 import { Mode } from "../query/api";
+import toFixed from "../util/toFixed";
 import CustomToast from "./CustomToast";
 
 export interface StatsDialogProps {
@@ -252,7 +253,7 @@ export default function StatsDialog({
                   <div className="flex w-full flex-row items-center justify-start gap-4">
                     <span>平均回答数</span>
                     <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
-                    <span>{stats.averageGuesses}回</span>
+                    <span>{toFixed(stats.averageGuesses, 2)}回</span>
                   </div>
                 </div>
               </>
