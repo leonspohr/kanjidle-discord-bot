@@ -205,7 +205,7 @@ export default function StatsDialog({
                         </span>
                       </span>
                       <span className="flex flex-row items-center gap-2">
-                        <span>最大記録</span>
+                        <span>最大</span>
                         <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
                         <span className="text-emerald-600">
                           {stats.maxConsecutive}勝
