@@ -79,6 +79,7 @@ export default function StatsDialog({
 
     let guessCounts;
     let sumGuessCounts = 0;
+    let sumHintCounts = 0;
     let numberWon = 0;
     if (mode === Mode.Hidden) {
       guessCounts = Array.from({ length: 6 }, () => 0);
@@ -87,6 +88,9 @@ export default function StatsDialog({
     }
     for (const game of games) {
       if (game.result === Result.Win) {
+        if (mode === Mode.Classic) {
+          sumHintCounts += game.hints;
+        }
         sumGuessCounts += game.attempts.length;
         numberWon += 1;
 
@@ -96,10 +100,16 @@ export default function StatsDialog({
         guessCounts[guessCounts.length - 1] += 1;
       }
     }
-    console.log(sumGuessCounts, numberWon);
     const averageGuesses = sumGuessCounts / numberWon;
+    const averageHints = sumHintCounts / numberWon;
 
-    return { consecutiveFromNow, maxConsecutive, guessCounts, averageGuesses };
+    return {
+      consecutiveFromNow,
+      maxConsecutive,
+      guessCounts,
+      averageGuesses,
+      averageHints,
+    };
   }, [games, mode]);
 
   return (
@@ -255,6 +265,13 @@ export default function StatsDialog({
                     <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
                     <span>{toFixed(stats.averageGuesses, 2)}回</span>
                   </div>
+                  {mode === Mode.Classic && (
+                    <div className="flex w-full flex-row items-center justify-start gap-4">
+                      <span>平均ヒント</span>
+                      <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
+                      <span>{toFixed(stats.averageHints, 2)}個</span>
+                    </div>
+                  )}
                 </div>
               </>
             )}
