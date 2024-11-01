@@ -1,6 +1,11 @@
 import "./index.css";
 import "./db/db.ts";
 
+import ChartJS from "chart.js/auto";
+import ChartDataLabels from "chartjs-plugin-datalabels";
+
+ChartJS.register(ChartDataLabels);
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
