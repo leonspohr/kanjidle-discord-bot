@@ -220,7 +220,10 @@ export default function StatsDialog({
                         }}
                         options={{
                           responsive: true,
-                          animation: false,
+                          transitions: {
+                            show: { animations: { y: { from: 0 } } },
+                            hide: { animations: { y: { from: 0 } } },
+                          },
                           events: [],
                           scales: {
                             x: {
