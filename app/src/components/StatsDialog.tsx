@@ -81,10 +81,11 @@ export default function StatsDialog({
     let sumGuessCounts = 0;
     let sumHintCounts = 0;
     let numberWon = 0;
+    let numberLost = 0;
     if (mode === Mode.Hidden) {
-      guessCounts = Array.from({ length: 6 }, () => 0);
+      guessCounts = Array.from({ length: 5 }, () => 0);
     } else {
-      guessCounts = Array.from({ length: 6 }, () => 0);
+      guessCounts = Array.from({ length: 5 }, () => 0);
     }
     for (const game of games) {
       if (game.result === Result.Win) {
@@ -97,7 +98,7 @@ export default function StatsDialog({
         const k = game.attempts.length >= 5 ? 5 : game.attempts.length;
         guessCounts[k - 1] += 1;
       } else {
-        guessCounts[guessCounts.length - 1] += 1;
+        numberLost += 1;
       }
     }
     const averageGuesses = sumGuessCounts / numberWon || 0;
@@ -109,6 +110,8 @@ export default function StatsDialog({
       guessCounts,
       averageGuesses,
       averageHints,
+      numberWon,
+      numberLost,
     };
   }, [games, mode]);
 
@@ -173,6 +176,25 @@ export default function StatsDialog({
               {games && stats && (
                 <>
                   <div className="flex w-full flex-row items-center justify-start gap-4">
+                    <span className="min-w-[4ch]">成績</span>
+                    <div className="grow flex-col">
+                      <span className="flex flex-row items-center gap-2">
+                        <span>勝利</span>
+                        <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
+                        <span className="text-emerald-600">
+                          {stats.numberWon}勝
+                        </span>
+                      </span>
+                      <span className="flex flex-row items-center gap-2">
+                        <span>敗北</span>
+                        <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
+                        <span className="text-rose-600">
+                          {stats.numberLost}敗
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex w-full flex-row items-center justify-start gap-4">
                     <span className="min-w-[4ch]">連勝</span>
                     <div className="grow flex-col">
                       <span className="flex flex-row items-center gap-2">
@@ -204,18 +226,11 @@ export default function StatsDialog({
                               "3",
                               "4",
                               mode === Mode.Hidden ? "5" : "5+",
-                              "X",
                             ],
                             datasets: [
                               {
                                 data: stats.guessCounts,
-                                backgroundColor: Array.from(
-                                  stats.guessCounts,
-                                  (_, i) =>
-                                    i === stats.guessCounts.length - 1
-                                      ? "rgb(225, 29, 72)"
-                                      : "rgb(5, 150, 105)",
-                                ),
+                                backgroundColor: "rgb(5, 150, 105)",
                               },
                             ],
                           }}
@@ -264,18 +279,20 @@ export default function StatsDialog({
                         回答数
                       </span>
                     </div>
-                    <div className="flex w-full flex-row items-center justify-start gap-4">
-                      <span>平均回答数</span>
-                      <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
-                      <span>{toFixed(stats.averageGuesses, 2)}回</span>
-                    </div>
-                    {mode === Mode.Classic && (
+                    <div className="w-full grow flex-col gap-2">
                       <div className="flex w-full flex-row items-center justify-start gap-4">
-                        <span>平均ヒント</span>
+                        <span>平均回答数</span>
                         <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
-                        <span>{toFixed(stats.averageHints, 2)}個</span>
+                        <span>{toFixed(stats.averageGuesses, 2)}回</span>
                       </div>
-                    )}
+                      {mode === Mode.Classic && (
+                        <div className="flex w-full flex-row items-center justify-start gap-4">
+                          <span>平均ヒント</span>
+                          <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
+                          <span>{toFixed(stats.averageHints, 2)}個</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </>
               )}
