@@ -77,6 +77,8 @@ export default function StatsDialog({
     }
 
     let guessCounts;
+    let sumGuessCounts = 0;
+    let numberWon = 0;
     if (mode === Mode.Hidden) {
       guessCounts = Array.from({ length: 6 }, () => 0);
     } else {
@@ -84,14 +86,19 @@ export default function StatsDialog({
     }
     for (const game of games) {
       if (game.result === Result.Win) {
+        sumGuessCounts += game.attempts.length;
+        numberWon += 1;
+
         const k = game.attempts.length >= 5 ? 5 : game.attempts.length;
-        guessCounts[k] += 1;
+        guessCounts[k - 1] += 1;
       } else {
         guessCounts[guessCounts.length - 1] += 1;
       }
     }
+    console.log(sumGuessCounts, numberWon);
+    const averageGuesses = sumGuessCounts / numberWon;
 
-    return { consecutiveFromNow, maxConsecutive, guessCounts };
+    return { consecutiveFromNow, maxConsecutive, guessCounts, averageGuesses };
   }, [games, mode]);
 
   return (
@@ -173,72 +180,80 @@ export default function StatsDialog({
                   </div>
                 </div>
                 <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-100/25" />
-                <div className="grid grid-cols-[1fr,auto] grid-rows-[auto,1fr,auto] place-items-center grid-areas-[title_title,y_chart,._x]">
-                  <span className="grid-in-[title]">回答数の回数</span>
-                  <div className="max-h-40 max-w-80 grid-in-[chart]">
-                    <Bar
-                      data={{
-                        labels: [
-                          "1",
-                          "2",
-                          "3",
-                          "4",
-                          mode === Mode.Hidden ? "5" : "5+",
-                          "X",
-                        ],
-                        datasets: [
-                          {
-                            data: stats.guessCounts,
-                            backgroundColor: Array.from(
-                              stats.guessCounts,
-                              (_, i) =>
-                                i === stats.guessCounts.length - 1
-                                  ? "rgb(225, 29, 72)"
-                                  : "rgb(5, 150, 105)",
-                            ),
-                          },
-                        ],
-                      }}
-                      options={{
-                        responsive: true,
-                        animation: false,
-                        events: [],
-                        scales: {
-                          x: {
-                            ticks: {
-                              color: "rgb(87, 83, 78)",
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <div className="grid grid-cols-[1fr,auto] grid-rows-[auto,1fr,auto] place-items-center grid-areas-[title_title,y_chart,._x]">
+                    <span className="grid-in-[title]">回答数の回数</span>
+                    <div className="max-h-40 max-w-80 grid-in-[chart]">
+                      <Bar
+                        data={{
+                          labels: [
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            mode === Mode.Hidden ? "5" : "5+",
+                            "X",
+                          ],
+                          datasets: [
+                            {
+                              data: stats.guessCounts,
+                              backgroundColor: Array.from(
+                                stats.guessCounts,
+                                (_, i) =>
+                                  i === stats.guessCounts.length - 1
+                                    ? "rgb(225, 29, 72)"
+                                    : "rgb(5, 150, 105)",
+                              ),
                             },
-                            grid: {
-                              color: "rgb(87, 83, 78)",
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          animation: false,
+                          events: [],
+                          scales: {
+                            x: {
+                              ticks: {
+                                color: "rgb(87, 83, 78)",
+                              },
+                              grid: {
+                                color: "rgb(87, 83, 78)",
+                              },
+                            },
+                            y: {
+                              ticks: {
+                                stepSize: 1,
+                                color: "rgb(87, 83, 78)",
+                              },
+                              grid: {
+                                color: "rgb(87, 83, 78)",
+                              },
                             },
                           },
-                          y: {
-                            ticks: {
-                              stepSize: 1,
-                              color: "rgb(87, 83, 78)",
-                            },
-                            grid: {
-                              color: "rgb(87, 83, 78)",
+                          plugins: {
+                            tooltip: { enabled: false },
+                            legend: { display: false },
+                            datalabels: {
+                              color: "rgb(244, 244, 245)",
+                              font: { weight: "bold" },
+                              anchor: "center",
+                              align: "center",
+                              formatter: (value) =>
+                                value ? String(value) : "",
                             },
                           },
-                        },
-                        plugins: {
-                          tooltip: { enabled: false },
-                          legend: { display: false },
-                          datalabels: {
-                            color: "rgb(244, 244, 245)",
-                            font: { weight: "bold" },
-                            anchor: "center",
-                            align: "center",
-                            formatter: (value) => (value ? String(value) : ""),
-                          },
-                        },
-                      }}
-                    />
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs text-stone-600 grid-in-[x] lg:text-sm xl:text-base">
+                      回答数
+                    </span>
                   </div>
-                  <span className="text-xs text-stone-600 grid-in-[x] lg:text-sm xl:text-base">
-                    回答数
-                  </span>
+                  <div className="flex w-full flex-row items-center justify-start gap-4">
+                    <span>平均回答数</span>
+                    <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
+                    <span>{stats.averageGuesses}回</span>
+                  </div>
                 </div>
               </>
             )}
