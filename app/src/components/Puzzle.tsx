@@ -162,19 +162,21 @@ export default function Puzzle() {
       if (state.result === Result.Win) {
         void winConfetti();
         setTimeout(() => {
+          setStatsMode(state.mode);
           setStatsCopyText(score(state));
           openStatsDialog();
         }, 1_000);
       } else if (state.result === Result.Lose) {
         void loseConfetti();
         setTimeout(() => {
+          setStatsMode(state.mode);
           setStatsCopyText(score(state));
           openStatsDialog();
         }, 1_000);
       }
     }
     prevState.current = state;
-  }, [openStatsDialog, setStatsCopyText, state]);
+  }, [openStatsDialog, setStatsCopyText, setStatsMode, state]);
 
   return (
     <div className="flex flex-col items-center justify-center gap-4">
