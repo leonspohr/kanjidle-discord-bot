@@ -7,11 +7,13 @@ import {
   Radio,
   RadioGroup,
 } from "@headlessui/react";
+import clsx from "clsx";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useMemo } from "react";
 import { Bar } from "react-chartjs-2";
 import toast from "react-hot-toast";
 import { BiX } from "react-icons/bi";
+import { DateTime } from "ts-luxon";
 
 import { db } from "../db/db";
 import { Result } from "../db/Result";
@@ -77,26 +79,23 @@ export default function StatsDialog({
       maxConsecutive = consecutive;
     }
 
-    let guessCounts;
+    const guessCounts = Array.from({ length: 5 }, () => 0);
     let sumGuessCounts = 0;
+    const hintCounts = Array.from({ length: 4 }, () => 0);
     let sumHintCounts = 0;
     let numberWon = 0;
     let numberLost = 0;
-    if (mode === Mode.Hidden) {
-      guessCounts = Array.from({ length: 5 }, () => 0);
-    } else {
-      guessCounts = Array.from({ length: 5 }, () => 0);
-    }
     for (const game of games) {
       if (game.result === Result.Win) {
+        numberWon += 1;
+        sumGuessCounts += game.attempts.length;
         if (mode === Mode.Classic) {
           sumHintCounts += game.hints;
+          hintCounts[game.hints] += 1;
         }
-        sumGuessCounts += game.attempts.length;
-        numberWon += 1;
 
-        const k = game.attempts.length >= 5 ? 5 : game.attempts.length;
-        guessCounts[k - 1] += 1;
+        const k = (game.attempts.length >= 5 ? 5 : game.attempts.length) - 1;
+        guessCounts[k] += 1;
       } else {
         numberLost += 1;
       }
@@ -104,16 +103,39 @@ export default function StatsDialog({
     const averageGuesses = sumGuessCounts / numberWon || 0;
     const averageHints = sumHintCounts / numberWon || 0;
 
+    let changedStats = false;
+    let addedGuessCount = null;
+    let addedHintCount = null;
+    if (
+      copyText &&
+      games.length &&
+      games[0].date === +DateTime.utc().startOf("day")
+    ) {
+      changedStats = true;
+      if (games[0].result === Result.Win) {
+        const k =
+          (games[0].attempts.length >= 5 ? 5 : games[0].attempts.length) - 1;
+        addedGuessCount = k;
+        if (mode === Mode.Classic) {
+          addedHintCount = games[0].hints;
+        }
+      }
+    }
+
     return {
+      changedStats,
       consecutiveFromNow,
       maxConsecutive,
       guessCounts,
+      addedGuessCount,
       averageGuesses,
+      hintCounts,
+      addedHintCount,
       averageHints,
       numberWon,
       numberLost,
     };
-  }, [games, mode]);
+  }, [games, mode, copyText]);
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
@@ -181,14 +203,26 @@ export default function StatsDialog({
                       <span className="flex flex-row items-center gap-2">
                         <span>勝利</span>
                         <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
-                        <span className="text-emerald-600">
+                        <span
+                          className={clsx(
+                            stats.changedStats &&
+                              stats.consecutiveFromNow >= 1 &&
+                              "text-emerald-600",
+                          )}
+                        >
                           {stats.numberWon}勝
                         </span>
                       </span>
                       <span className="flex flex-row items-center gap-2">
                         <span>敗北</span>
                         <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
-                        <span className="text-rose-600">
+                        <span
+                          className={clsx(
+                            stats.changedStats &&
+                              stats.consecutiveFromNow === 0 &&
+                              "text-rose-600",
+                          )}
+                        >
                           {stats.numberLost}敗
                         </span>
                       </span>
@@ -200,14 +234,28 @@ export default function StatsDialog({
                       <span className="flex flex-row items-center gap-2">
                         <span>現在</span>
                         <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
-                        <span className="text-emerald-600">
+                        <span
+                          className={clsx(
+                            stats.changedStats &&
+                              (stats.consecutiveFromNow >= 1
+                                ? "text-emerald-600"
+                                : "text-rose-600"),
+                          )}
+                        >
                           {stats.consecutiveFromNow}勝
                         </span>
                       </span>
                       <span className="flex flex-row items-center gap-2">
                         <span>最大</span>
                         <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
-                        <span className="text-emerald-600">
+                        <span
+                          className={clsx(
+                            stats.changedStats &&
+                              stats.consecutiveFromNow >=
+                                stats.maxConsecutive &&
+                              "text-emerald-600",
+                          )}
+                        >
                           {stats.maxConsecutive}勝
                         </span>
                       </span>
@@ -215,84 +263,141 @@ export default function StatsDialog({
                   </div>
                   <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-100/25" />
                   <div className="flex flex-col items-center justify-center gap-2">
-                    <div className="grid grid-cols-[1fr,auto] grid-rows-[auto,1fr,auto] place-items-center grid-areas-[title_title,y_chart,._x]">
-                      <span className="grid-in-[title]">回答数の回数</span>
-                      <div className="max-h-40 max-w-80 grid-in-[chart]">
-                        <Bar
-                          data={{
-                            labels: [
-                              "1",
-                              "2",
-                              "3",
-                              "4",
-                              mode === Mode.Hidden ? "5" : "5+",
-                            ],
-                            datasets: [
-                              {
-                                data: stats.guessCounts,
-                                backgroundColor: "rgb(5, 150, 105)",
-                              },
-                            ],
-                          }}
-                          options={{
-                            responsive: true,
-                            transitions: {
-                              show: { animations: { y: { from: 0 } } },
-                              hide: { animations: { y: { from: 0 } } },
-                            },
-                            events: [],
-                            scales: {
-                              x: {
-                                ticks: {
-                                  color: "rgb(87, 83, 78)",
-                                },
-                                grid: {
-                                  color: "rgb(87, 83, 78)",
-                                },
-                              },
-                              y: {
-                                ticks: {
-                                  precision: 0,
-                                  color: "rgb(87, 83, 78)",
-                                },
-                                grid: {
-                                  color: "rgb(87, 83, 78)",
-                                },
-                              },
-                            },
-                            plugins: {
-                              tooltip: { enabled: false },
-                              legend: { display: false },
-                              datalabels: {
-                                color: "rgb(244, 244, 245)",
-                                font: { weight: "bold" },
-                                anchor: "center",
-                                align: "center",
-                                formatter: (value) =>
-                                  value ? String(value) : "",
-                              },
-                            },
-                          }}
-                        />
-                      </div>
-                      <span className="text-xs text-stone-600 grid-in-[x] lg:text-sm xl:text-base">
-                        回答数
-                      </span>
+                    <div className="flex w-full flex-row items-center justify-between">
+                      <span>回答数</span>
+                      <span>平均{toFixed(stats.averageGuesses, 2)}回</span>
                     </div>
-                    <div className="w-full grow flex-col gap-2">
-                      <div className="flex w-full flex-row items-center justify-start gap-4">
-                        <span>平均回答数</span>
-                        <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
-                        <span>{toFixed(stats.averageGuesses, 2)}回</span>
-                      </div>
-                      {mode === Mode.Classic && (
-                        <div className="flex w-full flex-row items-center justify-start gap-4">
-                          <span>平均ヒント</span>
-                          <div className="my-0.5 h-px grow bg-zinc-900/25 dark:bg-zinc-100/25" />
-                          <span>{toFixed(stats.averageHints, 2)}個</span>
+                    <div className="max-h-40 max-w-80">
+                      <Bar
+                        data={{
+                          labels: [
+                            "1回",
+                            "2回",
+                            "3回",
+                            "4回",
+                            mode === Mode.Hidden ? "5回" : "5回+",
+                          ],
+                          datasets: [
+                            {
+                              data: stats.guessCounts,
+                              backgroundColor: Array.from(
+                                stats.guessCounts,
+                                (_, i) =>
+                                  i === stats.addedGuessCount
+                                    ? "rgb(5, 150, 105)"
+                                    : "rgb(87, 83, 78)",
+                              ),
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          transitions: {
+                            show: { animations: { y: { from: 0 } } },
+                            hide: { animations: { y: { from: 0 } } },
+                          },
+                          events: [],
+                          scales: {
+                            x: {
+                              ticks: {
+                                color: "rgb(87, 83, 78)",
+                              },
+                              grid: {
+                                color: "rgb(87, 83, 78)",
+                              },
+                            },
+                            y: {
+                              ticks: {
+                                precision: 0,
+                                color: "rgb(87, 83, 78)",
+                              },
+                              grid: {
+                                color: "rgb(87, 83, 78)",
+                              },
+                            },
+                          },
+                          plugins: {
+                            tooltip: { enabled: false },
+                            legend: { display: false },
+                            datalabels: {
+                              color: "rgb(244, 244, 245)",
+                              font: { weight: "bold" },
+                              anchor: "center",
+                              align: "center",
+                              formatter: (value) =>
+                                value ? String(value) : "",
+                            },
+                          },
+                        }}
+                      />
+                    </div>
+                    {mode === Mode.Classic && (
+                      <>
+                        <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-100/25" />
+                        <div className="flex w-full flex-row items-center justify-between">
+                          <span>ヒント使用数</span>
+                          <span>平均{toFixed(stats.averageHints, 2)}個</span>
                         </div>
-                      )}
-                    </div>
+                        <div className="max-h-40 max-w-80">
+                          <Bar
+                            data={{
+                              labels: ["0個", "1個", "2個", "3個"],
+                              datasets: [
+                                {
+                                  data: stats.hintCounts,
+                                  backgroundColor: Array.from(
+                                    stats.hintCounts,
+                                    (_, i) =>
+                                      i === stats.addedHintCount
+                                        ? "rgb(5, 150, 105)"
+                                        : "rgb(87, 83, 78)",
+                                  ),
+                                },
+                              ],
+                            }}
+                            options={{
+                              responsive: true,
+                              transitions: {
+                                show: { animations: { y: { from: 0 } } },
+                                hide: { animations: { y: { from: 0 } } },
+                              },
+                              events: [],
+                              scales: {
+                                x: {
+                                  ticks: {
+                                    color: "rgb(87, 83, 78)",
+                                  },
+                                  grid: {
+                                    color: "rgb(87, 83, 78)",
+                                  },
+                                },
+                                y: {
+                                  ticks: {
+                                    precision: 0,
+                                    color: "rgb(87, 83, 78)",
+                                  },
+                                  grid: {
+                                    color: "rgb(87, 83, 78)",
+                                  },
+                                },
+                              },
+                              plugins: {
+                                tooltip: { enabled: false },
+                                legend: { display: false },
+                                datalabels: {
+                                  color: "rgb(244, 244, 245)",
+                                  font: { weight: "bold" },
+                                  anchor: "center",
+                                  align: "center",
+                                  formatter: (value) =>
+                                    value ? String(value) : "",
+                                },
+                              },
+                            }}
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                 </>
               )}
