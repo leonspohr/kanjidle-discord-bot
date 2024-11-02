@@ -521,13 +521,13 @@ export default function Puzzle({
         )}
       </div>
       {mode === Mode.Classic && (
-        <div className="flex flex-col items-center justify-center gap-2">
+        <div className="flex flex-row flex-wrap items-center justify-center gap-2">
           <Button
             disabled={
               !isFullyLoaded || state.hints >= 1 || state.result !== Result.None
             }
             className={clsx(
-              "h-[3ch] w-[30ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 lg:text-2xl xl:text-3xl",
+              "h-[3ch] w-[9ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 lg:text-2xl xl:text-3xl",
               isFullyLoaded && state.hints >= 1
                 ? "disabled:border-amber-600 disabled:text-amber-600"
                 : "disabled:border-stone-600 disabled:text-stone-600",
@@ -545,11 +545,11 @@ export default function Puzzle({
               ? query.data.answer_meta.level === ""
                 ? "配当外"
                 : query.data.answer_meta.level === "0101j"
-                  ? "1級・準1級"
+                  ? "1/準1級"
                   : (query.data.answer_meta.level.endsWith("j") ? "準" : "") +
                     query.data.answer_meta.level.replace(/^0|j$/g, "") +
                     "級"
-              : "漢検レベル"}
+              : "漢検級"}
           </Button>
           <Button
             disabled={
@@ -559,7 +559,7 @@ export default function Puzzle({
               state.result !== Result.None
             }
             className={clsx(
-              "h-[3ch] w-[30ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 lg:text-2xl xl:text-3xl",
+              "h-[3ch] w-[9ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 lg:text-2xl xl:text-3xl",
               isFullyLoaded && state.hints >= 2
                 ? "disabled:border-amber-600 disabled:text-amber-600"
                 : "disabled:border-stone-600 disabled:text-stone-600",
@@ -585,7 +585,7 @@ export default function Puzzle({
               state.result !== Result.None
             }
             className={clsx(
-              "h-[3ch] w-[30ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 lg:text-2xl xl:text-3xl",
+              "h-[3ch] w-[9ch] rounded-lg border border-emerald-600 bg-inherit text-center text-xl text-emerald-600 transition-colors duration-300 ease-in-out enabled:hover:bg-emerald-600 enabled:hover:text-zinc-200 enabled:active:bg-emerald-600 lg:text-2xl xl:text-3xl",
               isFullyLoaded && state.hints >= 3
                 ? "disabled:border-amber-600 disabled:text-amber-600"
                 : "disabled:border-stone-600 disabled:text-stone-600",
@@ -604,7 +604,7 @@ export default function Puzzle({
                   .split("・")
                   .some((r) => query.data.answer === r)
                 ? "部首は漢字と同じ"
-                : query.data.answer_meta.radical
+                : query.data.answer_meta.radical.split("・").join(" ")
               : "部首"}
           </Button>
         </div>
@@ -655,20 +655,20 @@ export default function Puzzle({
                   真ん中に漢字１文字を入れてすべての二字熟語を作りましょう！矢印は文字の順番を表します。例えば、このパズルでは「◯折」「◯計」「当◯」「◯代」の◯が求められます。
                 </p>
                 <div className="flex select-none flex-row items-center justify-center gap-2">
-                  <div className="flex flex-col items-center justify-center gap-1">
-                    <div className="h-[3ch] w-[12ch] rounded-lg border border-emerald-600 bg-inherit text-center text-base text-emerald-600">
-                      部首
+                  <div className="flex flex-row items-center justify-center gap-1">
+                    <div className="h-[3ch] w-[7ch] rounded-md border border-emerald-600 bg-inherit text-center text-base text-emerald-600">
+                      漢検級
                     </div>
-                    <div className="h-[3ch] w-[12ch] rounded-lg border border-stone-600 bg-inherit text-center text-base text-stone-600">
+                    <div className="h-[3ch] w-[7ch] rounded-md border border-stone-600 bg-inherit text-center text-base text-stone-600">
                       画数
                     </div>
                   </div>
                   <span>→</span>
-                  <div className="flex flex-col items-center justify-center gap-1">
-                    <div className="h-[3ch] w-[12ch] rounded-lg border border-amber-600 bg-inherit text-center text-base text-amber-600">
-                      日
+                  <div className="flex flex-row items-center justify-center gap-1">
+                    <div className="h-[3ch] w-[7ch] rounded-md border border-amber-600 bg-inherit text-center text-base text-amber-600">
+                      9級
                     </div>
-                    <div className="h-[3ch] w-[12ch] rounded-lg border border-emerald-600 bg-inherit text-center text-base text-emerald-600">
+                    <div className="h-[3ch] w-[7ch] rounded-md border border-emerald-600 bg-inherit text-center text-base text-emerald-600">
                       画数
                     </div>
                   </div>
