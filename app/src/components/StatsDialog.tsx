@@ -160,6 +160,36 @@ export default function StatsDialog({
             <div className="flex w-full flex-col items-center justify-start gap-4 text-base lg:text-lg xl:text-xl">
               {games && stats && (
                 <>
+                  {stats.copyText && (
+                    <>
+                      <Button
+                        className="h-[3ch] w-[14ch] rounded-lg border border-zinc-600 bg-inherit text-center text-xl enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600 disabled:text-stone-600 lg:text-2xl xl:text-3xl"
+                        onClick={() => {
+                          void window.navigator.clipboard.writeText(
+                            stats.copyText,
+                          );
+                          toast(
+                            <CustomToast type="success">
+                              コピーしました
+                            </CustomToast>,
+                            {
+                              id: "copy",
+                            },
+                          );
+                        }}
+                      >
+                        コピーする
+                      </Button>
+                      <textarea
+                        readOnly
+                        rows={5}
+                        wrap="soft"
+                        className="w-full resize-none rounded-md border border-zinc-600 bg-inherit p-2 text-sm outline outline-2 outline-transparent transition-colors duration-300 ease-in-out focus:outline-blue-400"
+                        value={stats.copyText}
+                      />
+                      <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-100/25" />
+                    </>
+                  )}
                   <div className="flex w-full flex-row items-center justify-start gap-4">
                     <span className="min-w-[4ch]">成績</span>
                     <div className="grow flex-col">
@@ -362,36 +392,6 @@ export default function StatsDialog({
                       </>
                     )}
                   </div>
-                  {stats.copyText && (
-                    <>
-                      <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-100/25" />
-                      <textarea
-                        readOnly
-                        rows={5}
-                        wrap="soft"
-                        className="w-full resize-none rounded-md border border-zinc-600 bg-inherit p-2 text-sm outline outline-2 outline-transparent transition-colors duration-300 ease-in-out focus:outline-blue-400"
-                        value={stats.copyText}
-                      />
-                      <Button
-                        className="h-[3ch] w-[14ch] rounded-lg border border-zinc-600 bg-inherit text-center text-xl enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600 disabled:text-stone-600 lg:text-2xl xl:text-3xl"
-                        onClick={() => {
-                          void window.navigator.clipboard.writeText(
-                            stats.copyText,
-                          );
-                          toast(
-                            <CustomToast type="success">
-                              コピーしました
-                            </CustomToast>,
-                            {
-                              id: "copy",
-                            },
-                          );
-                        }}
-                      >
-                        コピーする
-                      </Button>
-                    </>
-                  )}
                 </>
               )}
             </div>
