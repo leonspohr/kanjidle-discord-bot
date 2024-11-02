@@ -12,7 +12,7 @@ import SettingsContext, {
   Settings,
 } from "./providers/SettingsContext";
 import StatsContext from "./providers/StatsContext";
-import { Mode } from "./query/api";
+import { Difficulty, Mode, Seed } from "./query/api";
 import { updateTheme } from "./util/theme";
 
 export default function App() {
@@ -22,27 +22,26 @@ export default function App() {
     defaultSettings,
   );
 
-  const [statsDialogIsOpen, setStatsDialogIsOpen] = useState(false);
-  const [statsCopyText, setStatsCopyText] = useJSONLocalStorage<string>(
-    "statsCopyText",
-    "",
-  );
-  const [statsMode, setStatsMode] = useJSONLocalStorage<Mode>(
-    "statsMode",
-    Mode.Hidden,
-  );
-
   const prefersDark = useMediaQuery("(prefers-color-scheme: dark)");
   useEffect(() => {
     updateTheme();
   }, [prefersDark]);
 
+  const [statsDialogIsOpen, setStatsDialogIsOpen] = useState(false);
+
+  const [mode, setMode] = useJSONLocalStorage<Mode>("mode", Mode.Hidden);
+
+  const [seed, setSeed] = useState<Seed>(Seed.Today);
+
+  const [difficulty, setDifficulty] = useJSONLocalStorage<Difficulty>(
+    "difficulty",
+    Difficulty.Normal,
+  );
+
   return (
     <SettingsContext.Provider value={[settings, setSettings]}>
       <StatsContext.Provider
         value={[
-          setStatsMode,
-          setStatsCopyText,
           () => {
             setStatsDialogIsOpen(true);
           },
@@ -63,16 +62,13 @@ export default function App() {
                   <Button
                     className="rounded-lg border border-zinc-600 p-1 hover:bg-zinc-600 hover:text-zinc-200 active:bg-zinc-600"
                     onClick={() => {
-                      setStatsCopyText("");
                       setStatsDialogIsOpen(true);
                     }}
                   >
                     <BiBarChartAlt2 />
                   </Button>
                   <StatsDialog
-                    copyText={statsCopyText}
-                    mode={statsMode}
-                    onModeChange={setStatsMode}
+                    mode={mode}
                     isOpen={statsDialogIsOpen}
                     onClose={() => setStatsDialogIsOpen(false)}
                   />
@@ -90,7 +86,14 @@ export default function App() {
                   />
                 </div>
               </div>
-              <Puzzle />
+              <Puzzle
+                mode={mode}
+                onModeChange={setMode}
+                seed={seed}
+                onSeedChange={setSeed}
+                difficulty={difficulty}
+                onDifficultyChange={setDifficulty}
+              />
             </div>
             <div className="container flex h-[4ch] flex-row items-center justify-between border-t border-stone-600 px-2 text-xs text-stone-600 lg:text-sm xl:text-base">
               <span>スコアの記録はブラウザにローカルに保存されます</span>

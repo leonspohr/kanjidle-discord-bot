@@ -4,8 +4,6 @@ import {
   DialogBackdrop,
   DialogPanel,
   DialogTitle,
-  Radio,
-  RadioGroup,
 } from "@headlessui/react";
 import clsx from "clsx";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -15,24 +13,20 @@ import toast from "react-hot-toast";
 import { BiX } from "react-icons/bi";
 import { DateTime } from "ts-luxon";
 
-import { db } from "../db/db";
+import { db, GameState } from "../db/db";
 import { Result } from "../db/Result";
 import { Mode } from "../query/api";
 import toFixed from "../util/toFixed";
 import CustomToast from "./CustomToast";
 
 export interface StatsDialogProps {
-  copyText: string | null;
   mode: Mode;
-  onModeChange: (mode: Mode) => void;
   isOpen: boolean;
   onClose: () => void;
 }
 
 export default function StatsDialog({
-  copyText,
   mode,
-  onModeChange,
   isOpen,
   onClose,
 }: StatsDialogProps) {
@@ -106,12 +100,10 @@ export default function StatsDialog({
     let changedStats = false;
     let addedGuessCount = null;
     let addedHintCount = null;
-    if (
-      copyText &&
-      games.length &&
-      games[0].date === +DateTime.utc().startOf("day")
-    ) {
+    let copyText = "";
+    if (games.length && games[0].date === +DateTime.utc().startOf("day")) {
       changedStats = true;
+      copyText = score(games[0]);
       if (games[0].result === Result.Win) {
         const k =
           (games[0].attempts.length >= 5 ? 5 : games[0].attempts.length) - 1;
@@ -134,8 +126,9 @@ export default function StatsDialog({
       averageHints,
       numberWon,
       numberLost,
+      copyText,
     };
-  }, [games, mode, copyText]);
+  }, [games, mode]);
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
@@ -154,11 +147,7 @@ export default function StatsDialog({
               <DialogTitle className="flex flex-row items-end justify-start gap-2">
                 <span>記録</span>
                 <span className="text-base lg:text-lg xl:text-xl">
-                  {copyText
-                    ? mode === Mode.Hidden
-                      ? "隠しヒント"
-                      : "クラシック"
-                    : ""}
+                  {mode === Mode.Hidden ? "隠しヒント" : "クラシック"}
                 </span>
               </DialogTitle>
               <Button
@@ -169,32 +158,6 @@ export default function StatsDialog({
               </Button>
             </div>
             <div className="flex w-full flex-col items-center justify-start gap-4 text-base lg:text-lg xl:text-xl">
-              {!copyText && (
-                <RadioGroup
-                  value={mode}
-                  onChange={onModeChange}
-                  className="flex flex-col items-center justify-center gap-2"
-                >
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <div className="flex w-full flex-row items-center justify-center">
-                      <Radio
-                        as="button"
-                        value={Mode.Hidden}
-                        className="h-[3ch] w-[12ch] rounded-md rounded-r-none border border-zinc-600 bg-inherit text-center text-base hover:bg-zinc-600 hover:text-zinc-200 active:bg-zinc-600 data-[checked]:bg-zinc-600 data-[checked]:text-zinc-200 lg:text-lg xl:text-xl"
-                      >
-                        隠しヒント
-                      </Radio>
-                      <Radio
-                        as="button"
-                        value={Mode.Classic}
-                        className="h-[3ch] w-[12ch] rounded-md rounded-l-none border border-zinc-600 bg-inherit text-center text-base hover:bg-zinc-600 hover:text-zinc-200 active:bg-zinc-600 data-[checked]:bg-zinc-600 data-[checked]:text-zinc-200 lg:text-lg xl:text-xl"
-                      >
-                        クラシック
-                      </Radio>
-                    </div>
-                  </div>
-                </RadioGroup>
-              )}
               {games && stats && (
                 <>
                   <div className="flex w-full flex-row items-center justify-start gap-4">
@@ -399,34 +362,36 @@ export default function StatsDialog({
                       </>
                     )}
                   </div>
-                </>
-              )}
-              {copyText && (
-                <>
-                  <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-100/25" />
-                  <textarea
-                    readOnly
-                    rows={5}
-                    wrap="soft"
-                    className="w-full resize-none rounded-md border border-zinc-600 bg-inherit p-2 text-sm outline outline-2 outline-transparent transition-colors duration-300 ease-in-out focus:outline-blue-400"
-                    value={copyText}
-                  />
-                  <Button
-                    className="h-[3ch] w-[14ch] rounded-lg border border-zinc-600 bg-inherit text-center text-xl enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600 disabled:text-stone-600 lg:text-2xl xl:text-3xl"
-                    onClick={() => {
-                      void window.navigator.clipboard.writeText(copyText);
-                      toast(
-                        <CustomToast type="success">
-                          コピーしました
-                        </CustomToast>,
-                        {
-                          id: "copy",
-                        },
-                      );
-                    }}
-                  >
-                    コピーする
-                  </Button>
+                  {stats.copyText && (
+                    <>
+                      <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-100/25" />
+                      <textarea
+                        readOnly
+                        rows={5}
+                        wrap="soft"
+                        className="w-full resize-none rounded-md border border-zinc-600 bg-inherit p-2 text-sm outline outline-2 outline-transparent transition-colors duration-300 ease-in-out focus:outline-blue-400"
+                        value={stats.copyText}
+                      />
+                      <Button
+                        className="h-[3ch] w-[14ch] rounded-lg border border-zinc-600 bg-inherit text-center text-xl enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600 disabled:text-stone-600 lg:text-2xl xl:text-3xl"
+                        onClick={() => {
+                          void window.navigator.clipboard.writeText(
+                            stats.copyText,
+                          );
+                          toast(
+                            <CustomToast type="success">
+                              コピーしました
+                            </CustomToast>,
+                            {
+                              id: "copy",
+                            },
+                          );
+                        }}
+                      >
+                        コピーする
+                      </Button>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -435,4 +400,56 @@ export default function StatsDialog({
       </div>
     </Dialog>
   );
+}
+
+function score(state: GameState): string {
+  const today = DateTime.fromMillis(state.date, { zone: "utc" }).toFormat(
+    "yyyy年LL月dd日",
+  );
+  const mode = state.mode === Mode.Hidden ? "隠しヒント" : "クラシック";
+  let lines;
+  if (state.result === Result.Lose && state.mode === Mode.Classic) {
+    lines = ["⬛🟨⬛", "🟨🟥🟨", "⬛🟨⬛"];
+  } else if (state.result === Result.Lose && state.mode === Mode.Hidden) {
+    lines = ["🟨🟨🟨", "🟨🟥🟨", "🟨🟨🟨"];
+  } else if (state.mode === Mode.Classic) {
+    lines = ["⬛🟩⬛", "🟩✅🟩", "⬛🟩⬛"];
+  } else {
+    switch (state.attempts.length) {
+      case 1:
+        lines = ["⬛🟩⬛", "🟩✅🟩", "⬛🟩⬛"];
+        break;
+      case 2:
+        lines = ["🟩🟨⬛", "🟨✅🟨", "⬛🟨⬛"];
+        break;
+      case 3:
+        lines = ["🟨🟨🟩", "🟨✅🟨", "⬛🟨⬛"];
+        break;
+      case 4:
+        lines = ["🟨🟨🟨", "🟨✅🟨", "⬛🟨🟩"];
+        break;
+      case 5:
+      default:
+        lines = ["🟨🟨🟨", "🟨✅🟨", "🟩🟨🟨"];
+        break;
+    }
+  }
+  lines.unshift(`Kanjidle ${today}`);
+  lines.push("https://kanjidle.onecomp.one");
+  lines[1] += " " + mode;
+  if (state.result === Result.Lose) {
+    lines[2] +=
+      state.mode === Mode.Hidden
+        ? " X/5"
+        : ` ${state.attempts.length}回でギブ！`;
+  } else {
+    lines[2] +=
+      state.mode === Mode.Hidden
+        ? ` ${state.attempts.length}/5`
+        : ` ${state.attempts.length}回目`;
+  }
+  if (state.mode === Mode.Classic) {
+    lines[3] += state.hints ? ` ヒント${state.hints}個` : ` ヒントなし！`;
+  }
+  return lines.join("\n");
 }

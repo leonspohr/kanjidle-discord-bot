@@ -24,9 +24,8 @@ import {
 } from "react-icons/bi";
 import { DateTime, Duration } from "ts-luxon";
 
-import { db, GameState, GameStateKey } from "../db/db";
+import { db, GameStateKey } from "../db/db";
 import { Result } from "../db/Result";
-import { useJSONLocalStorage } from "../hooks/useLocalStorage";
 import StatsContext from "../providers/StatsContext";
 import { Difficulty, fetchPuzzle, Loc, Mode, Seed } from "../query/api";
 import Coin from "./Coin";
@@ -35,18 +34,24 @@ import CoinPlaceholder from "./CoinPlaceholder";
 import CustomToast from "./CustomToast";
 import CustomToaster from "./CustomToaster";
 
-export default function Puzzle() {
-  const [setStatsMode, setStatsCopyText, openStatsDialog] =
-    useContext(StatsContext);
+export interface PuzzleProps {
+  mode: Mode;
+  onModeChange: (mode: Mode) => void;
+  seed: Seed;
+  onSeedChange: (seed: Seed) => void;
+  difficulty: Difficulty;
+  onDifficultyChange: (difficulty: Difficulty) => void;
+}
 
-  const [mode, setMode] = useJSONLocalStorage<Mode>("mode", Mode.Hidden);
-
-  const [seed, setSeed] = useState<Seed>(Seed.Today);
-
-  const [difficulty, setDifficulty] = useJSONLocalStorage<Difficulty>(
-    "difficulty",
-    Difficulty.Normal,
-  );
+export default function Puzzle({
+  mode,
+  seed,
+  difficulty,
+  onModeChange,
+  onSeedChange,
+  onDifficultyChange,
+}: PuzzleProps) {
+  const [openStatsDialog] = useContext(StatsContext);
 
   const [today, setToday] = useState(DateTime.utc().startOf("day"));
   const date = useMemo(() => (seed === Seed.Today ? +today : 0), [seed, today]);
@@ -163,8 +168,6 @@ export default function Puzzle() {
         void winConfetti();
         if (state.date !== 0) {
           setTimeout(() => {
-            setStatsMode(state.mode);
-            setStatsCopyText(score(state));
             openStatsDialog();
           }, 1_000);
         }
@@ -172,15 +175,13 @@ export default function Puzzle() {
         void loseConfetti();
         if (state.date !== 0) {
           setTimeout(() => {
-            setStatsMode(state.mode);
-            setStatsCopyText(score(state));
             openStatsDialog();
           }, 1_000);
         }
       }
     }
     prevState.current = state;
-  }, [openStatsDialog, setStatsCopyText, setStatsMode, state]);
+  }, [openStatsDialog, state]);
 
   return (
     <div className="flex flex-col items-center justify-center gap-4">
@@ -204,10 +205,7 @@ export default function Puzzle() {
       <div className="flex flex-row flex-wrap items-center justify-center gap-2 text-base lg:text-lg xl:text-xl">
         <RadioGroup
           value={mode}
-          onChange={(m) => {
-            setMode(m);
-            setStatsMode(m);
-          }}
+          onChange={onModeChange}
           className="flex flex-col items-center justify-center gap-2"
         >
           <div className="flex flex-col items-center justify-center gap-2">
@@ -253,7 +251,7 @@ export default function Puzzle() {
                 <Button
                   className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600"
                   onClick={() => {
-                    setSeed(Seed.Today);
+                    onSeedChange(Seed.Today);
                   }}
                 >
                   {today.toFormat("yyyy年LL月dd日")}
@@ -264,9 +262,9 @@ export default function Puzzle() {
                 <Button
                   className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600"
                   onClick={() => {
-                    setSeed(Seed.Random);
+                    onSeedChange(Seed.Random);
                     if (!difficulty) {
-                      setDifficulty(Difficulty.Normal);
+                      onDifficultyChange(Difficulty.Normal);
                     }
                   }}
                 >
@@ -313,7 +311,7 @@ export default function Puzzle() {
                       <Button
                         className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600"
                         onClick={() => {
-                          setDifficulty(d);
+                          onDifficultyChange(d);
                         }}
                       >
                         {difficultyName(d)}
@@ -344,7 +342,6 @@ export default function Puzzle() {
                 <Button
                   className="h-[3ch] w-[14ch] rounded-lg border border-zinc-600 bg-inherit text-center text-xl enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600 disabled:text-stone-600 lg:text-2xl xl:text-3xl"
                   onClick={() => {
-                    setStatsCopyText(score(state));
                     openStatsDialog();
                   }}
                 >
@@ -753,58 +750,6 @@ function difficultyName(d: Difficulty): string {
     case Difficulty.Lunatic2:
       return "倜儻級・Profound";
   }
-}
-
-function score(state: GameState): string {
-  const today = DateTime.fromMillis(state.date, { zone: "utc" }).toFormat(
-    "yyyy年LL月dd日",
-  );
-  const mode = state.mode === Mode.Hidden ? "隠しヒント" : "クラシック";
-  let lines;
-  if (state.result === Result.Lose && state.mode === Mode.Classic) {
-    lines = ["⬛🟨⬛", "🟨🟥🟨", "⬛🟨⬛"];
-  } else if (state.result === Result.Lose && state.mode === Mode.Hidden) {
-    lines = ["🟨🟨🟨", "🟨🟥🟨", "🟨🟨🟨"];
-  } else if (state.mode === Mode.Classic) {
-    lines = ["⬛🟩⬛", "🟩✅🟩", "⬛🟩⬛"];
-  } else {
-    switch (state.attempts.length) {
-      case 1:
-        lines = ["⬛🟩⬛", "🟩✅🟩", "⬛🟩⬛"];
-        break;
-      case 2:
-        lines = ["🟩🟨⬛", "🟨✅🟨", "⬛🟨⬛"];
-        break;
-      case 3:
-        lines = ["🟨🟨🟩", "🟨✅🟨", "⬛🟨⬛"];
-        break;
-      case 4:
-        lines = ["🟨🟨🟨", "🟨✅🟨", "⬛🟨🟩"];
-        break;
-      case 5:
-      default:
-        lines = ["🟨🟨🟨", "🟨✅🟨", "🟩🟨🟨"];
-        break;
-    }
-  }
-  lines.unshift(`Kanjidle ${today}`);
-  lines.push("https://kanjidle.onecomp.one");
-  lines[1] += " " + mode;
-  if (state.result === Result.Lose) {
-    lines[2] +=
-      state.mode === Mode.Hidden
-        ? " X/5"
-        : ` ${state.attempts.length}回でギブ！`;
-  } else {
-    lines[2] +=
-      state.mode === Mode.Hidden
-        ? ` ${state.attempts.length}/5`
-        : ` ${state.attempts.length}回目`;
-  }
-  if (state.mode === Mode.Classic) {
-    lines[3] += state.hints ? ` ヒント${state.hints}個` : ` ヒントなし！`;
-  }
-  return lines.join("\n");
 }
 
 async function winConfetti() {
