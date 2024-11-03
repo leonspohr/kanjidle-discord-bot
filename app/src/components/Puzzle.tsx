@@ -4,10 +4,10 @@ import {
   DisclosureButton,
   DisclosurePanel,
   Input,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
   Radio,
   RadioGroup,
 } from "@headlessui/react";
@@ -228,8 +228,15 @@ export default function Puzzle({
           </div>
         </RadioGroup>
         <div className="flex flex-row flex-wrap items-center justify-center gap-2">
-          <Menu>
-            <MenuButton className="flex h-[3ch] flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-2 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
+          <Listbox
+            onChange={(v: Seed) => {
+              onSeedChange(v);
+              if (v === Seed.Random && !difficulty) {
+                onDifficultyChange(Difficulty.Normal);
+              }
+            }}
+          >
+            <ListboxButton className="flex h-[3ch] flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-2 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
               {({ active }) => (
                 <>
                   <span>
@@ -242,37 +249,28 @@ export default function Puzzle({
                   </span>
                 </>
               )}
-            </MenuButton>
-            <MenuItems
+            </ListboxButton>
+            <ListboxOptions
               anchor="bottom"
               className="my-1 flex flex-col items-center justify-center rounded-lg border border-zinc-600 bg-zinc-100 p-1 text-base text-zinc-900 lg:text-lg xl:text-xl dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-zinc-800"
             >
-              <MenuItem>
-                <Button
-                  className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600"
-                  onClick={() => {
-                    onSeedChange(Seed.Today);
-                  }}
-                >
-                  {today.toFormat("yyyy年LL月dd日")}
-                </Button>
-              </MenuItem>
+              <ListboxOption
+                value={Seed.Today}
+                as="button"
+                className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center hover:bg-zinc-600 hover:text-zinc-200 active:bg-zinc-600 data-[focus]:bg-zinc-600 data-[focus]:text-zinc-200"
+              >
+                {today.toFormat("yyyy年LL月dd日")}
+              </ListboxOption>
               <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-100/25" />
-              <MenuItem>
-                <Button
-                  className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600"
-                  onClick={() => {
-                    onSeedChange(Seed.Random);
-                    if (!difficulty) {
-                      onDifficultyChange(Difficulty.Normal);
-                    }
-                  }}
-                >
-                  ランダム
-                </Button>
-              </MenuItem>
-            </MenuItems>
-          </Menu>
+              <ListboxOption
+                value={Seed.Random}
+                as="button"
+                className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center hover:bg-zinc-600 hover:text-zinc-200 active:bg-zinc-600 data-[focus]:bg-zinc-600 data-[focus]:text-zinc-200"
+              >
+                ランダム
+              </ListboxOption>
+            </ListboxOptions>
+          </Listbox>
           {seed === Seed.Today ? (
             isFullyLoaded ? (
               <div className="flex h-[3ch] select-none flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-2 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
@@ -290,8 +288,8 @@ export default function Puzzle({
               </div>
             )
           ) : (
-            <Menu>
-              <MenuButton className="flex h-[3ch] flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-2 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
+            <Listbox onChange={onDifficultyChange}>
+              <ListboxButton className="flex h-[3ch] flex-row items-center justify-center gap-1 rounded-lg border border-zinc-600 bg-inherit px-2 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600">
                 {({ active }) => (
                   <>
                     <span>
@@ -300,30 +298,28 @@ export default function Puzzle({
                     <span>{difficultyName(difficulty)}</span>
                   </>
                 )}
-              </MenuButton>
-              <MenuItems
+              </ListboxButton>
+              <ListboxOptions
                 anchor="bottom"
                 className="my-1 flex flex-col items-center justify-center rounded-lg border border-zinc-600 bg-zinc-100 p-1 text-base text-zinc-900 lg:text-lg xl:text-xl dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-zinc-800"
               >
                 {Object.values(Difficulty).map((d, i) => (
                   <>
-                    <MenuItem key={d}>
-                      <Button
-                        className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center enabled:hover:bg-zinc-600 enabled:hover:text-zinc-200 enabled:active:bg-zinc-600 disabled:border-stone-600"
-                        onClick={() => {
-                          onDifficultyChange(d);
-                        }}
-                      >
-                        {difficultyName(d)}
-                      </Button>
-                    </MenuItem>
+                    <ListboxOption
+                      key={d}
+                      value={d}
+                      as="button"
+                      className="flex w-full flex-row items-center justify-center rounded-md px-1 text-center hover:bg-zinc-600 hover:text-zinc-200 active:bg-zinc-600 data-[focus]:bg-zinc-600 data-[focus]:text-zinc-200"
+                    >
+                      {difficultyName(d)}
+                    </ListboxOption>
                     {i !== Object.values(Difficulty).length - 1 && (
                       <div className="my-0.5 h-px w-full bg-zinc-900/25 dark:bg-zinc-100/25" />
                     )}
                   </>
                 ))}
-              </MenuItems>
-            </Menu>
+              </ListboxOptions>
+            </Listbox>
           )}
         </div>
       </div>
