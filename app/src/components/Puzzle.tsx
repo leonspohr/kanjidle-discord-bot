@@ -595,13 +595,19 @@ export default function Puzzle({
               });
             }}
           >
-            {isFullyLoaded && state.hints >= 3
-              ? query.data.answer_meta.radical
-                  .split("・")
-                  .some((r) => query.data.answer === r)
-                ? "部首は漢字と同じ"
-                : query.data.answer_meta.radical.split("・").join(" ")
-              : "部首"}
+            {isFullyLoaded && state.hints >= 3 ? (
+              query.data.answer_meta.radical
+                .split("・")
+                .some((r) => query.data.answer === r) ? (
+                <span className="flex flex-col items-center justify-center text-lg lg:text-xl xl:text-2xl">
+                  部首＝漢字
+                </span>
+              ) : (
+                query.data.answer_meta.radical.split("・").join(" ")
+              )
+            ) : (
+              "部首"
+            )}
           </Button>
         </div>
       )}
