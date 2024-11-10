@@ -11,6 +11,7 @@ pub struct PuzzleOptions {
     pub min_kanji_class: KanjiClass,
     pub max_kanji_class: KanjiClass,
     pub rare_kanji_bias: f64,
+    pub fixed: Option<Ji>,
 
     // Hint picking options
     pub min_word_rarity: usize,
@@ -64,7 +65,10 @@ impl<'a, R> Generator<'a, R> {
 impl<'g, R: rand::Rng> Generator<'g, R> {
     pub fn choose_puzzle(&'g mut self, options: &PuzzleOptions) -> Puzzle {
         let start = Instant::now();
-        let ks = self.choose_kanji(options);
+        let mut ks = self.choose_kanji(options);
+        if let Some(fixed) = options.fixed {
+            ks.insert(0, fixed);
+        }
         let t = start.elapsed();
         tracing::debug!("Chose kanjis in {t:?}");
 
@@ -183,8 +187,14 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
                 .zip(ixes)
                 .map(|(s, ix)| s[ix])
                 .collect_vec();
+            let extra_hints: Vec<&Hint> = splits[options.guarantee_answer_by..options.num_hints]
+                .iter()
+                .map(|s| s[0])
+                .collect();
+            let all_hints = [&chosen_hints[..], &extra_hints[..]].concat();
 
-            if !self.contains_same_hint(&chosen_hints)
+            if !self.contains_same_hint(&all_hints)
+                && !self.contains_same_numerical_hint(&all_hints)
                 && self
                     .find_unintended_solutions(answer, &chosen_hints)
                     .is_empty()
@@ -192,10 +202,7 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
                 return Some(Puzzle {
                     answer,
                     hints: chosen_hints.iter().copied().cloned().collect(),
-                    extra_hints: splits[options.guarantee_answer_by..options.num_hints]
-                        .iter()
-                        .map(|s| s[0].clone())
-                        .collect(),
+                    extra_hints: extra_hints.iter().copied().cloned().collect(),
                 });
             }
         }
@@ -212,6 +219,15 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
                 .unwrap()
                 .variants;
             variants.iter().any(|v| v == &hs[1].hint)
+        })
+    }
+
+    pub fn contains_same_numerical_hint(&self, hints: &[&Hint]) -> bool {
+        hints.iter().combinations(2).any(|hs| {
+            let nums = "一ニ三四五六七八九十百千万";
+            hs[0].answer_location == hs[1].answer_location
+                && nums.contains(hs[0].answer.0)
+                && nums.contains(hs[1].answer.0)
         })
     }
 

@@ -81,13 +81,14 @@ async fn main() -> Result<()> {
     let duration = start.elapsed();
     tracing::info!("Loaded words in {duration:?}");
 
-    #[cfg(feature = "any-date")]
+    #[cfg(feature = "debug-routes")]
     let app = Router::new()
         .route("/v1/day", get(get_day))
         .route("/v1/today", get(get_today))
+        .route("/v1/fixed", get(get_fixed))
         .route("/v1/random", get(get_random));
 
-    #[cfg(not(feature = "any-date"))]
+    #[cfg(not(feature = "debug-routes"))]
     let app = Router::new()
         .route("/v1/today", get(get_today))
         .route("/v1/random", get(get_random));
@@ -136,11 +137,19 @@ struct ReqTodayPuzzleOptions {
     mode: ReqMode,
 }
 
-#[cfg(feature = "any-date")]
+#[cfg(feature = "debug-routes")]
 #[derive(Debug, Deserialize)]
 struct ReqDayPuzzleOptions {
     mode: ReqMode,
     date: i64,
+}
+
+#[cfg(feature = "debug-routes")]
+#[derive(Debug, Deserialize)]
+struct ReqPuzzleWithAnswerPuzzleOptions {
+    difficulty: Difficulty,
+    mode: ReqMode,
+    answer: Ji,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
@@ -172,6 +181,7 @@ impl ReqPuzzleOptions {
                 min_kanji_class: KanjiClass::Kyoiku,
                 max_kanji_class: KanjiClass::Kyoiku,
                 rare_kanji_bias: 0.5,
+                fixed: None,
                 min_word_kanji_class: KanjiClass::Kyoiku,
                 max_word_kanji_class: KanjiClass::Kyoiku,
                 min_word_rarity: 0,
@@ -186,6 +196,7 @@ impl ReqPuzzleOptions {
                 min_kanji_class: KanjiClass::Kyoiku,
                 max_kanji_class: KanjiClass::Kyoiku,
                 rare_kanji_bias: 1.0,
+                fixed: None,
                 min_word_kanji_class: KanjiClass::Kyoiku,
                 max_word_kanji_class: KanjiClass::Kyoiku,
                 min_word_rarity: 0,
@@ -200,6 +211,7 @@ impl ReqPuzzleOptions {
                 min_kanji_class: KanjiClass::Kyoiku,
                 max_kanji_class: KanjiClass::Joyo,
                 rare_kanji_bias: 1.0,
+                fixed: None,
                 min_word_kanji_class: KanjiClass::Kyoiku,
                 max_word_kanji_class: KanjiClass::Joyo,
                 min_word_rarity: 0,
@@ -214,6 +226,7 @@ impl ReqPuzzleOptions {
                 min_kanji_class: KanjiClass::Kyoiku,
                 max_kanji_class: KanjiClass::Joyo,
                 rare_kanji_bias: 2.0,
+                fixed: None,
                 min_word_kanji_class: KanjiClass::Kyoiku,
                 max_word_kanji_class: KanjiClass::Joyo,
                 min_word_rarity: 6_000,
@@ -228,6 +241,7 @@ impl ReqPuzzleOptions {
                 min_kanji_class: KanjiClass::Joyo,
                 max_kanji_class: KanjiClass::Kentei,
                 rare_kanji_bias: 2.0,
+                fixed: None,
                 min_word_kanji_class: KanjiClass::Kyoiku,
                 max_word_kanji_class: KanjiClass::Kentei,
                 min_word_rarity: 12_000,
@@ -242,6 +256,7 @@ impl ReqPuzzleOptions {
                 min_kanji_class: KanjiClass::Joyo,
                 max_kanji_class: KanjiClass::All,
                 rare_kanji_bias: 2.0,
+                fixed: None,
                 min_word_kanji_class: KanjiClass::Kyoiku,
                 max_word_kanji_class: KanjiClass::All,
                 min_word_rarity: 12_000,
@@ -309,7 +324,7 @@ impl std::fmt::Display for ResHint {
     }
 }
 
-#[cfg(feature = "any-date")]
+#[cfg(feature = "debug-routes")]
 async fn get_day(
     State(state): State<Arc<ApiState>>,
     extract::Query(payload): extract::Query<ReqDayPuzzleOptions>,
@@ -381,6 +396,28 @@ async fn get_random(
     let mut g = state.to_generator_random();
     let puzzle = ResPuzzle::new_from_puzzle(
         &g.choose_puzzle(&payload.to_puzzle_options()),
+        &state.kanji_data,
+        payload.difficulty,
+    );
+    Ok(Json(puzzle))
+}
+
+#[cfg(feature = "debug-routes")]
+async fn get_fixed(
+    State(state): State<Arc<ApiState>>,
+    extract::Query(payload): extract::Query<ReqPuzzleWithAnswerPuzzleOptions>,
+) -> Result<Json<ResPuzzle>, StatusCode> {
+    let mut g = state.to_generator_random();
+    let puzzle = ResPuzzle::new_from_puzzle(
+        &g.choose_puzzle(&{
+            let mut opts = ReqPuzzleOptions {
+                mode: payload.mode,
+                difficulty: payload.difficulty,
+            }
+            .to_puzzle_options();
+            opts.fixed = Some(payload.answer);
+            opts
+        }),
         &state.kanji_data,
         payload.difficulty,
     );
