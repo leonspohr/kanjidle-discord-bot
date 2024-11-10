@@ -1,23 +1,22 @@
-FROM rust:1.82 AS builder
+FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
+WORKDIR /app
 
-WORKDIR /usr/src/server
+FROM chef AS planner
 
-# Dependency caching method from https://stackoverflow.com/a/58474618/10499803
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
 
-RUN echo 'fn main() {}' > dummy.rs
-COPY Cargo.toml .
-COPY Cargo.lock .
-RUN sed -i 's#src/main.rs#dummy.rs#' Cargo.toml
-RUN cargo build --release
-RUN sed -i 's#dummy.rs#src/main.rs#' Cargo.toml
+FROM chef AS builder
 
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 RUN cargo build --release
 
 FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /usr/src/server/target/release/kanjidle-server /usr/local/bin/kanjidle-server
+COPY --from=builder /app/target/release/kanjidle-server /usr/local/bin/kanjidle-server
 COPY assets /assets
 COPY generated /generated
 
