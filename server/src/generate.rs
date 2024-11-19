@@ -223,11 +223,16 @@ impl<'g, R: rand::Rng> Generator<'g, R> {
     }
 
     pub fn contains_same_numerical_hint(&self, hints: &[&Hint]) -> bool {
+        let nums = "一ニ三四五六七八九十百千万";
         hints.iter().combinations(2).any(|hs| {
-            let nums = "一ニ三四五六七八九十百千万";
-            hs[0].answer_location == hs[1].answer_location
-                && nums.contains(hs[0].hint.0)
-                && nums.contains(hs[1].hint.0)
+            if nums.contains(hs[0].answer.0) {
+                // Stricter check if the answer is a number
+                nums.contains(hs[0].hint.0) && nums.contains(hs[1].hint.0)
+            } else {
+                hs[0].answer_location == hs[1].answer_location
+                    && nums.contains(hs[0].hint.0)
+                    && nums.contains(hs[1].hint.0)
+            }
         })
     }
 
