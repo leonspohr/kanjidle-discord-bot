@@ -129,7 +129,13 @@ export default function Puzzle({
     return null;
   }, [game]);
 
-  const isFullyLoaded = query.isSuccess && game != null && state != null;
+  const isFullyLoaded =
+    query.isSuccess &&
+    game != null &&
+    state != null &&
+    game.date === state.date &&
+    game.difficulty === state.difficulty &&
+    game.mode === state.mode;
 
   const [diff, setDiff] = useState<Duration>(
     today.plus({ days: 1 }).diffNow(["hours", "minutes", "seconds"]),
