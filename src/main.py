@@ -1,5 +1,6 @@
-import discord
-from secrets/secrets import DISCORD_BOT_TOKEN
+# import discord
+from secrets.secrets import DISCORD_BOT_TOKEN
+import query.api
 
 
 
